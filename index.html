@@ -20,6 +20,7 @@
         <a href="#calibration">Calibration</a>
         <a href="#capture">Capture</a>
         <a href="#processing">Processing</a>
+        <a href="#nas-results">Results</a>
         <a href="#inference">Inference</a>
         <a href="docs/index.html">API docs</a>
       </div>
@@ -420,6 +421,64 @@ python src/process/object_turntable/generate_colmap.py</code></pre>
           <div role="cell">Solve wrist IK, then preview in Viser or expose GUI buttons for start, pregrasp, grasp, squeeze.</div>
           <div role="cell"><code>RobotWrapper.solve_ik</code>, <code>RobotGUIController</code></div>
         </div>
+      </div>
+    </section>
+
+    <section id="nas-results" class="section" aria-labelledby="nas-results-title">
+      <div class="section-head">
+        <p class="eyebrow">NAS samples</p>
+        <h2 id="nas-results-title">Concrete results from <code>shared_data/paradex</code></h2>
+        <p>
+          A few compact artifacts copied from the NAS make the pipeline less abstract:
+          object proposal/segmentation outputs from the 6D tracking stack, plus recorded
+          Inspire hand motion channels from a short capture.
+        </p>
+      </div>
+
+      <div class="result-hero">
+        <figure>
+          <img src="assets/results/cnos-qualitative.webp" alt="CNOS qualitative object segmentation examples with CAD inputs, RGB images, and SAM/FastSAM overlays." loading="lazy" />
+          <figcaption>Object-level proposal and segmentation outputs used by the 6D perception side of the stack.</figcaption>
+        </figure>
+      </div>
+
+      <div class="result-grid">
+        <article class="result-card wide">
+          <img src="assets/results/inspire-motion-summary.png" alt="Three time-series plots showing Inspire hand position, commanded action, and force channels over about ten seconds." loading="lazy" />
+          <div>
+            <h3>Inspire hand motion sample</h3>
+            <p>
+              Loaded from <code>inspire_motion/time.npy</code>, <code>position.npy</code>,
+              <code>action.npy</code>, and <code>force.npy</code>. The clip has 209 samples
+              over 9.98 seconds, six channels, position range 386-601, action range 400-800,
+              and valid force range -1-80 after removing sentinel values.
+            </p>
+          </div>
+        </article>
+
+        <article class="result-card">
+          <img src="assets/results/cnos-bbq-result.webp" alt="RGB image and segmentation result highlighting a BBQ sauce bottle." loading="lazy" />
+          <h3>Single-object proposal check</h3>
+          <p>RGB-to-mask sanity view for a tabletop object: input scene, grayscale context, and highlighted proposal.</p>
+        </article>
+
+        <article class="result-card">
+          <img src="assets/results/cnos-tools-result.webp" alt="RGB image and segmentation result highlighting surgical scissors." loading="lazy" />
+          <h3>Tool-shaped object check</h3>
+          <p>A thin object case that makes proposal quality easy to inspect before downstream pose estimation.</p>
+        </article>
+
+        <article class="result-card wide">
+          <img src="assets/results/cnos-framework.webp" alt="CNOS framework diagram showing onboarding, proposal, and matching stages." loading="lazy" />
+          <div>
+            <h3>How proposals enter the object stack</h3>
+            <p>
+              The NAS copy includes the CNOS framework diagram used by the object tracking
+              dependency: rendered CAD templates, RGB proposals, descriptor extraction, and
+              object-level matching. This maps directly to the <code>object6d</code> stage.
+            </p>
+          </div>
+        </article>
       </div>
     </section>
 

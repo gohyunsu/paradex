@@ -367,6 +367,7 @@ h3 {
 .system-card,
 .mode-card,
 .lane,
+.result-card,
 .ops-grid article,
 .detail-grid article,
 .link-card,
@@ -394,6 +395,7 @@ h3 {
 .system-card li,
 .mode-card p,
 .lane p,
+.result-card p,
 .ops-grid li,
 .detail-grid p,
 .link-card p {
@@ -544,6 +546,68 @@ h3 {
   text-transform: uppercase;
 }
 
+.result-hero {
+  margin-bottom: 1rem;
+}
+
+.result-hero figure,
+.result-card {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.result-hero img,
+.result-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #f8fafb;
+}
+
+.result-hero figcaption {
+  padding: 0.8rem 1rem 1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.result-card {
+  min-width: 0;
+}
+
+.result-card h3,
+.result-card p {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.result-card h3 {
+  margin-top: 1rem;
+}
+
+.result-card p {
+  margin-bottom: 1rem;
+}
+
+.result-card.wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  align-items: center;
+  grid-column: 1 / -1;
+}
+
+.result-card.wide h3 {
+  margin-top: 0;
+}
+
 .repo-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -579,6 +643,7 @@ h3 {
   .timeline,
   .split,
   .process-lanes,
+  .result-card.wide,
   .repo-grid {
     grid-template-columns: 1fr;
   }
@@ -612,6 +677,7 @@ h3 {
   .version-strip,
   .topology-grid,
   .mode-grid,
+  .result-grid,
   .ops-grid,
   .detail-grid {
     grid-template-columns: 1fr;
