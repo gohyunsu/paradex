@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Paradex Pipeline Field Guide</title>
-  <meta name="description" content="A practical guide to the Paradex multi-camera vision and robot-control pipeline: topology, calibration, capture, processing, 6D pose, grasp inference, validation, and operations." />
+  <title>Paradex System Map</title>
+  <meta name="description" content="Current system map for the Paradex distributed camera, dataset, processing, pose, grasp, and robot-control pipeline." />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
@@ -15,467 +15,360 @@
         <span>Paradex</span>
       </a>
       <div class="nav-links">
-        <a href="#map">Map</a>
-        <a href="#topology">Topology</a>
-        <a href="#calibration">Calibration</a>
+        <a href="#updates">Updates</a>
+        <a href="#system">System</a>
+        <a href="#runtime">Runtime</a>
         <a href="#capture">Capture</a>
         <a href="#processing">Processing</a>
-        <a href="#nas-results">Results</a>
-        <a href="#inference">Inference</a>
-        <a href="docs/index.html">API docs</a>
+        <a href="#results">Results</a>
+        <a href="docs/index.html">Docs</a>
       </div>
     </nav>
 
     <section id="top" class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow">Multi-camera vision + robot control framework</p>
-        <h1 id="hero-title"><span>Paradex</span><span>Pipeline</span><span>Field Guide</span></h1>
+        <p class="eyebrow">Current fork map</p>
+        <h1 id="hero-title">Paradex system pipeline</h1>
         <p class="tagline">
-          A clean operating map for the full Paradex rig: camera daemons, calibration,
-          synchronized capture, dataset processing, 6D object pose, grasp inference,
-          and validation.
+          One page for the current system boundary: camera daemons, capture-PC transport,
+          dataset acquisition, <code>paradex.process</code>, object pose, grasp inference,
+          validation, and NAS-backed artifacts.
         </p>
         <div class="hero-actions" aria-label="Primary actions">
-          <a class="button primary" href="#map">Open pipeline map</a>
-          <a class="button" href="docs/index.html">Browse API docs</a>
-          <a class="button quiet" href="https://github.com/gohyunsu/paradex">GitHub source</a>
+          <a class="button primary" href="#system">View system path</a>
+          <a class="button" href="docs/index.html">Open API docs</a>
+          <a class="button quiet" href="https://github.com/gohyunsu/paradex">GitHub</a>
         </div>
         <dl class="version-strip" aria-label="Repository state">
           <div>
-            <dt>Upstream</dt>
-            <dd>willi19/paradex</dd>
+            <dt>Fork</dt>
+            <dd>gohyunsu/paradex</dd>
           </div>
           <div>
-            <dt>Base revision</dt>
-            <dd>98b56987</dd>
+            <dt>Upstream base</dt>
+            <dd>48d6f039</dd>
           </div>
           <div>
-            <dt>Site target</dt>
-            <dd>gohyunsu.github.io/paradex</dd>
+            <dt>Deploy path</dt>
+            <dd>main -> Pages</dd>
           </div>
         </dl>
       </div>
 
-      <figure class="pipeline-visual" aria-label="Paradex end-to-end pipeline diagram">
-        <div class="rail-label">Main PC</div>
-        <div class="rail-label">Capture PCs</div>
-        <div class="rail-label">Robot / Teleop</div>
-        <div class="rail stage calibrate">
-          <span>1</span>
-          <strong>Calibrate</strong>
-          <small>intrinsic, extrinsic, hand-eye, C2R</small>
+      <figure class="system-board" aria-label="Paradex system flow diagram">
+        <div class="board-track">
+          <article class="node node-blue">
+            <span>01</span>
+            <strong>Calibrate</strong>
+            <small>intrinsic, extrinsic, hand-eye, C2R</small>
+          </article>
+          <article class="node node-teal">
+            <span>02</span>
+            <strong>Acquire</strong>
+            <small>daemon, rcc, record/stream/snapshot</small>
+          </article>
+          <article class="node node-green">
+            <span>03</span>
+            <strong>Persist</strong>
+            <small>raw sessions, camera params, NAS roots</small>
+          </article>
+          <article class="node node-amber">
+            <span>04</span>
+            <strong>Process</strong>
+            <small>jobs, overlays, masks, COLMAP, upload</small>
+          </article>
+          <article class="node node-coral">
+            <span>05</span>
+            <strong>Infer</strong>
+            <small>6D pose, grasp, IK, execution check</small>
+          </article>
         </div>
-        <div class="rail stage camera">
-          <span>2</span>
-          <strong>Arm Cameras</strong>
-          <small>ZMQ daemon, PySpin, UTGE900 sync</small>
-        </div>
-        <div class="rail stage capture">
-          <span>3</span>
-          <strong>Capture</strong>
-          <small>images, video, teleop, robot states</small>
-        </div>
-        <div class="rail stage process">
-          <span>4</span>
-          <strong>Process</strong>
-          <small>sync, undistort, overlays, COLMAP</small>
-        </div>
-        <div class="rail stage infer">
-          <span>5</span>
-          <strong>Infer</strong>
-          <small>6D pose, grasp, IK, GUI execution</small>
-        </div>
+        <figcaption>
+          Main PC coordinates. Capture PCs own cameras. Shared storage is the contract.
+        </figcaption>
       </figure>
     </section>
   </header>
 
   <main>
-    <section id="map" class="section" aria-labelledby="map-title">
+    <section id="updates" class="section" aria-labelledby="updates-title">
       <div class="section-head">
-        <p class="eyebrow">Operating model</p>
-        <h2 id="map-title">End-to-end pipeline map</h2>
+        <p class="eyebrow">Latest upstream integrated</p>
+        <h2 id="updates-title">What changed in the current main</h2>
         <p>
-          Paradex is easiest to reason about as a chain of artifacts. Every stage
-          either updates calibration state, captures raw synchronized data, derives
-          processed assets, or consumes those assets for pose/grasp inference.
+          The fork now includes upstream changes through <code>48d6f039</code>. The site
+          reflects the new runtime model instead of the older script-only view.
         </p>
       </div>
 
-      <div class="timeline" aria-label="Pipeline stages">
-        <article class="stage-card">
-          <span class="step">00</span>
-          <h3>Prepare the rig</h3>
-          <p>Install the editable package, confirm config files, bring up capture PCs, and verify robot network access.</p>
-          <dl>
-            <dt>Entry points</dt>
-            <dd><code>pip install -e .</code>, <code>src/camera/server_daemon.py</code>, <code>src/validate/</code></dd>
-            <dt>Output</dt>
-            <dd>Reachable camera daemons, known ports, current hardware config.</dd>
-          </dl>
+      <div class="update-grid">
+        <article class="update-card">
+          <h3><code>paradex.process</code></h3>
+          <p>Reusable batch framework with <code>Job</code>, <code>Ctx</code>, skip-if-done, NAS cache, upload, progress, ETA, and distributed dispatch.</p>
         </article>
-
-        <article class="stage-card">
-          <span class="step">01</span>
-          <h3>Calibrate</h3>
-          <p>Run camera and robot calibration in dependency order. Re-run downstream steps whenever upstream geometry changes.</p>
-          <dl>
-            <dt>Order</dt>
-            <dd><code>intrinsic -> extrinsic -> handeye</code>; optional xArm URDF patch.</dd>
-            <dt>Output</dt>
-            <dd><code>intrinsics.json</code>, <code>extrinsics.json</code>, <code>C2R.npy</code>.</dd>
-          </dl>
+        <article class="update-card">
+          <h3>Processing apps migrated</h3>
+          <p><code>miyungpa</code>, <code>upload_video</code>, and <code>object_turntable</code> now run through workers/orchestrators built on <code>paradex.process</code>.</p>
         </article>
-
-        <article class="stage-card">
-          <span class="step">02</span>
-          <h3>Capture</h3>
-          <p>Collect synchronized images or videos, plus optional arm, hand, teleop, timestamps, and state histories.</p>
-          <dl>
-            <dt>Entry points</dt>
-            <dd><code>src/capture/camera/*_remote.py</code>, <code>src/dataset_acquisition/*/capture.py</code>.</dd>
-            <dt>Output</dt>
-            <dd><code>~/shared_data/capture/.../raw/</code> session folders with camera params and C2R snapshots.</dd>
-          </dl>
+        <article class="update-card">
+          <h3>Capture transport</h3>
+          <p><code>Publisher</code>/<code>Collector</code> use a msgpack envelope with realtime PUB/SUB or lossless PUSH/PULL delivery.</p>
         </article>
-
-        <article class="stage-card">
-          <span class="step">03</span>
-          <h3>Process</h3>
-          <p>Convert raw sessions into analysis-ready artifacts: frame sync, overlays, contact maps, masks, rotations, and COLMAP reconstructions.</p>
-          <dl>
-            <dt>Entry points</dt>
-            <dd><code>src/process/miyungpa/</code>, <code>src/process/object_turntable/</code>.</dd>
-            <dt>Output</dt>
-            <dd>Synced robot streams, merged overlay videos, masks, rotations, sparse reconstructions.</dd>
-          </dl>
+        <article class="update-card">
+          <h3>Camera API</h3>
+          <p>The live model is now <code>image</code> or <code>acquire</code>, with independent record, stream, snapshot, and parameter sinks.</p>
         </article>
-
-        <article class="stage-card">
-          <span class="step">04</span>
-          <h3>Estimate pose</h3>
-          <p>Undistort images, match object templates, optimize multi-view 6D pose, and validate C2R with robot overlays.</p>
-          <dl>
-            <dt>Entry points</dt>
-            <dd><code>src/object6d/capture.py</code>, <code>src/object6d/validate_c2r.py</code>.</dd>
-            <dt>Output</dt>
-            <dd><code>obj_T_multiview_matching.pkl</code>, validation grids, projected mesh overlays.</dd>
-          </dl>
+        <article class="update-card">
+          <h3>Live camera tuning</h3>
+          <p><code>src/util/camera_tuning/remote_tuner.py</code> adjusts per-camera exposure/gain through running daemons and saves <code>camera.json</code>.</p>
         </article>
-
-        <article class="stage-card">
-          <span class="step">05</span>
-          <h3>Infer and execute</h3>
-          <p>Map grasps from object frame into robot frame, solve IK, then visualize or drive the GUI controller.</p>
-          <dl>
-            <dt>Entry points</dt>
-            <dd><code>src/inference/bodex/</code>, <code>src/inference/grasp_w_gui/</code>.</dd>
-            <dt>Output</dt>
-            <dd>Projected sanity checks, Viser scenes, GUI stages for pregrasp, grasp, and squeeze.</dd>
-          </dl>
+        <article class="update-card">
+          <h3>Docs expanded</h3>
+          <p>Generated docs now cover calibration, dataset acquisition, image ops, process, camera protocol, transport, and scene visualization.</p>
         </article>
       </div>
     </section>
 
-    <section id="topology" class="section section-tint" aria-labelledby="topology-title">
+    <section id="system" class="section section-tint" aria-labelledby="system-title">
+      <div class="section-head">
+        <p class="eyebrow">System path</p>
+        <h2 id="system-title">Artifacts flow from rig state to robot action</h2>
+        <p>
+          Each stage publishes a concrete file, runtime state, or API contract consumed by
+          the next stage. When a contract changes, re-run the dependent stages.
+        </p>
+      </div>
+
+      <div class="flow-table" role="table" aria-label="Paradex system path">
+        <div class="flow-row header" role="row">
+          <div role="columnheader">Stage</div>
+          <div role="columnheader">Runtime owner</div>
+          <div role="columnheader">Contract</div>
+        </div>
+        <div class="flow-row" role="row">
+          <div role="cell">Calibrate rig</div>
+          <div role="cell">Main PC solvers and robot controllers</div>
+          <div role="cell"><code>intrinsics.json</code>, <code>extrinsics.json</code>, <code>C2R.npy</code>, patched xArm URDFs</div>
+        </div>
+        <div class="flow-row" role="row">
+          <div role="cell">Acquire camera data</div>
+          <div role="cell"><code>remote_camera_controller</code> plus capture-PC daemons</div>
+          <div role="cell"><code>image</code> stills or <code>acquire</code> with record/stream/snapshot sinks</div>
+        </div>
+        <div class="flow-row" role="row">
+          <div role="cell">Record sessions</div>
+          <div role="cell"><code>CaptureSession</code>, robot, hand, teleop scripts</div>
+          <div role="cell"><code>raw/</code> folders with videos, states, timestamps, metadata, and camera params</div>
+        </div>
+        <div class="flow-row" role="row">
+          <div role="cell">Process datasets</div>
+          <div role="cell"><code>paradex.process</code> workers and app-specific transforms</div>
+          <div role="cell">Synced streams, overlays, contact outputs, masks, rotations, COLMAP models</div>
+        </div>
+        <div class="flow-row" role="row">
+          <div role="cell">Estimate and execute</div>
+          <div role="cell"><code>object6d</code>, grasp modules, robot GUI/controller</div>
+          <div role="cell">Object pose, robot-frame grasp, IK result, overlay/Viser validation</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="runtime" class="section" aria-labelledby="runtime-title">
       <div class="section-head">
         <p class="eyebrow">Runtime topology</p>
-        <h2 id="topology-title">What runs where</h2>
+        <h2 id="runtime-title">What runs where</h2>
         <p>
-          The main PC coordinates. Capture PCs own cameras. Robot/teleop scripts run
-          where the hardware is reachable. Shared storage is the contract between stages.
+          The current code separates orchestration, device ownership, data movement, and
+          reusable library logic. This is the shortest useful map.
         </p>
       </div>
 
       <div class="topology-grid">
-        <article class="system-card">
+        <article class="system-card accent-blue">
           <h3>Main PC</h3>
           <ul>
-            <li>Launches remote camera capture and stream clients over SSH.</li>
-            <li>Runs calibration solvers, processing orchestrators, pose estimation, and inference.</li>
-            <li>Writes camera parameter snapshots beside every capture.</li>
+            <li>Owns orchestration scripts and generated result inspection.</li>
+            <li>Drives <code>remote_camera_controller</code>, <code>run_distributed</code>, calibration solvers, and inference.</li>
+            <li>Reads/writes NAS roots through <code>shared_dir</code> and local cache through <code>download_dir</code>.</li>
           </ul>
         </article>
-        <article class="system-card">
+        <article class="system-card accent-teal">
           <h3>Capture PCs</h3>
           <ul>
-            <li>Run <code>src/camera/server_daemon.py</code> before remote capture.</li>
-            <li>Own local <code>CameraLoader -> Camera -> PySpinCamera</code> devices.</li>
-            <li>Expose ping, status, and command sockets on ports <code>5480</code>, <code>5481</code>, and <code>5482</code>.</li>
+            <li>Run <code>src/camera/server_daemon.py</code>.</li>
+            <li>Camera daemon ports: ping <code>5480</code>, status <code>5481</code>, command <code>5482</code>.</li>
+            <li>Generic capture-PC channels: command <code>6890</code>, data <code>1234</code>.</li>
           </ul>
         </article>
-        <article class="system-card">
-          <h3>Robot + teleop</h3>
+        <article class="system-card accent-green">
+          <h3>Robot and teleop</h3>
           <ul>
-            <li>XArm, Allegro, Inspire, XSens, and Oculus are controlled by capture or dataset scripts.</li>
-            <li><code>CaptureSession</code> can record camera, arm, hand, teleop, timestamps, and state together.</li>
-            <li>URDFs should be patched from factory xArm calibration before relying on FK/IK.</li>
+            <li>Dataset scripts coordinate XArm, Allegro, Inspire, XSens, Oculus, and camera capture.</li>
+            <li><code>CaptureSession</code> writes camera, arm, hand, teleop, timestamp, and state streams together.</li>
+            <li>Robot execution depends on current C2R and xArm kinematic calibration.</li>
           </ul>
         </article>
-        <article class="system-card">
-          <h3>Storage contract</h3>
+        <article class="system-card accent-amber">
+          <h3>Reusable libraries</h3>
           <ul>
-            <li>Raw sessions generally land under <code>~/shared_data/capture/...</code>.</li>
-            <li>Local heavy processing may use <code>~/paradex_download/...</code> and upload results back.</li>
-            <li>Current calibration is loaded via <code>paradex.calibration.utils</code>.</li>
+            <li><code>paradex/io</code>: camera, transport, robot, teleop IO.</li>
+            <li><code>paradex/image</code>: <code>ImageDict</code>, undistort, marker detection, projection, merge.</li>
+            <li><code>paradex/visualization/scene</code>: Viser/Open3D scene API for playback and exports.</li>
           </ul>
-        </article>
-      </div>
-    </section>
-
-    <section id="calibration" class="section" aria-labelledby="calibration-title">
-      <div class="section-head">
-        <p class="eyebrow">Stage 1</p>
-        <h2 id="calibration-title">Calibration dependency chain</h2>
-        <p>
-          Calibration is the most important ordering constraint in the repo. If focal
-          length, camera placement, robot kinematics, or the end-effector fixture changes,
-          refresh the dependent outputs before capturing new data.
-        </p>
-      </div>
-
-      <div class="split">
-        <div class="runbook">
-          <h3>Run order</h3>
-          <ol class="checklist">
-            <li><strong>Intrinsic:</strong> produce per-camera internal parameters.</li>
-            <li><strong>Extrinsic:</strong> capture Charuco observations and solve multi-camera poses with COLMAP.</li>
-            <li><strong>xArm kinematics:</strong> optionally read factory parameters and patch URDFs.</li>
-            <li><strong>Hand-eye:</strong> drive the arm through a fixed trajectory and solve camera-to-robot <code>C2R.npy</code>.</li>
-          </ol>
-        </div>
-        <div class="command-panel">
-          <h3>Commands</h3>
-          <pre><code># Extrinsic capture and solve, main PC
-python src/calibration/extrinsic/capture.py
-python src/calibration/extrinsic/calculate.py
-
-# Optional xArm URDF patch
-python src/calibration/xarm_kinematic_calibration.py --robot_ip 192.168.1.xxx
-
-# Hand-eye capture and solve, main PC
-python src/calibration/handeye/capture.py --arm xarm
-python src/calibration/handeye/calculate.py --arm xarm</code></pre>
-        </div>
-      </div>
-
-      <div class="detail-grid">
-        <article>
-          <h3>Extrinsic calibration</h3>
-          <p>
-            <code>capture.py</code> auto-launches capture-PC clients, displays detected and
-            accumulated Charuco corners, and stores full-resolution images plus 2D markers.
-            <code>calculate.py</code> builds a COLMAP database, solves camera poses, removes
-            high reprojection-error corners, rescales to metric board geometry, then writes
-            current camera params.
-          </p>
-          <a href="https://github.com/gohyunsu/paradex/blob/main/src/calibration/extrinsic/README.md">Extrinsic README</a>
-        </article>
-        <article>
-          <h3>Hand-eye calibration</h3>
-          <p>
-            <code>capture.py</code> records image sets and robot state at every trajectory
-            waypoint. <code>calculate.py</code> triangulates the board, computes FK, builds
-            relative motions, solves Tsai-Lenz <code>AX=XB</code>, and renders debug overlays.
-          </p>
-          <a href="https://github.com/gohyunsu/paradex/blob/main/src/calibration/handeye/README.md">Hand-eye README</a>
         </article>
       </div>
     </section>
 
     <section id="capture" class="section section-tint" aria-labelledby="capture-title">
       <div class="section-head">
-        <p class="eyebrow">Stage 2</p>
-        <h2 id="capture-title">Capture modes</h2>
+        <p class="eyebrow">Capture model</p>
+        <h2 id="capture-title">Two acquisition modes, independent sinks</h2>
         <p>
-          Camera-only capture can run locally or distributed. Full dataset capture uses
-          <code>CaptureSession</code> to coordinate camera, robot, hand, teleop, sync, and
-          metadata under one session directory.
+          New code should use <code>remote_camera_controller</code>. The daemon owns cameras;
+          callers choose still capture or continuous acquisition, then toggle outputs.
         </p>
       </div>
 
       <div class="mode-grid">
         <article class="mode-card">
-          <h3>Camera images</h3>
-          <p>Keyboard-triggered still capture. Use distributed mode for the full rig.</p>
-          <pre><code># capture PCs
-python src/camera/server_daemon.py
+          <h3>Distributed still images</h3>
+          <p>Single-frame PySpin stills across the rig. Use for calibration and object-pose capture.</p>
+          <pre><code>python src/camera/server_daemon.py
 
-# main PC
-python src/capture/camera/image_remote.py --save_path object6d/session1</code></pre>
-          <p class="meta">Keys: <code>c</code> capture, <code>q</code> quit.</p>
+python src/capture/camera/image_remote.py \
+  --save_path object6d/session1</code></pre>
         </article>
 
         <article class="mode-card">
-          <h3>Camera video</h3>
-          <p>Synchronized recordings. Enable hardware trigger when frame-level sync matters.</p>
-          <pre><code>python src/capture/camera/video_remote.py \
-  --save_path capture/object_turntable/mug \
-  --sync_mode --fps 30</code></pre>
-          <p class="meta">Keys: <code>c</code> start, <code>s</code> stop, <code>q</code> quit.</p>
+          <h3>Continuous acquisition</h3>
+          <p><code>arm()</code> starts acquisition. Recording, live preview, and snapshots are separate sinks.</p>
+          <pre><code>rcc.arm(syncMode=False, fps=30)
+rcc.set_stream(True)
+rcc.set_record("capture/demo/raw", on=True)
+rcc.snapshot("capture/demo/check", count=1)
+rcc.set_record(on=False)
+rcc.stop()
+rcc.end()</code></pre>
         </article>
 
         <article class="mode-card">
-          <h3>Teleop demos</h3>
-          <p>XSens/Oculus driven robot demos, optionally recording arm and hand streams.</p>
+          <h3>Dataset sessions</h3>
+          <p>Session capture wraps camera, robot, hand, teleop, and metadata under one raw layout.</p>
           <pre><code>python src/dataset_acquisition/miyungpa/capture.py \
-  --name demo1 --arm xarm --hand allegro --device xsens</code></pre>
-          <p class="meta">Output includes video, arm, hand, teleop, timestamps, and state.</p>
+  --name demo1 --arm xarm --hand allegro --device xsens
+
+python src/dataset_acquisition/object_turntable/capture.py \
+  --name mug</code></pre>
         </article>
 
         <article class="mode-card">
-          <h3>Turntable scans</h3>
-          <p>Camera-only object video for reconstruction, mask extraction, and 6D assets.</p>
-          <pre><code>python src/dataset_acquisition/object_turntable/capture.py --name mug</code></pre>
-          <p class="meta">Rotate one full revolution between start and stop.</p>
+          <h3>Live tuning and recovery</h3>
+          <p>Adjust exposure/gain through daemons; monitor liveness before long recordings.</p>
+          <pre><code>python src/util/camera_tuning/remote_tuner.py
+python src/camera/monitor_daemon.py
+python src/camera/reset_cameras.py</code></pre>
         </article>
       </div>
     </section>
 
     <section id="processing" class="section" aria-labelledby="processing-title">
       <div class="section-head">
-        <p class="eyebrow">Stage 3</p>
-        <h2 id="processing-title">Post-processing pipelines</h2>
+        <p class="eyebrow">Processing model</p>
+        <h2 id="processing-title">Batch jobs now share one framework</h2>
         <p>
-          Processing turns raw capture folders into data products other stages can trust.
-          The scripts are intentionally concrete and often hard-code dataset roots or object
-          loops, so review the bottom of each script before running.
+          Concrete pipelines stay in <code>src/process</code> and <code>src/util</code>.
+          Shared lifecycle behavior lives in <code>paradex.process</code>.
         </p>
       </div>
 
       <div class="process-lanes">
         <article class="lane">
-          <h3>Miyungpa manipulation demos</h3>
-          <p>Sync robot states to camera frames, render robot mesh overlays, create merged videos, compute contact artifacts, and serve galleries.</p>
-          <ol>
-            <li><code>download_dir</code> copies raw data locally.</li>
-            <li><code>match_sync</code> aligns arm/hand streams to video frames.</li>
-            <li><code>overlay</code> projects robot meshes into each camera.</li>
-            <li><code>upload_output</code> sends processed artifacts back to shared storage.</li>
-          </ol>
-          <pre><code># distributed
-python src/process/miyungpa/process_client.py
-python src/process/miyungpa/process_main.py
+          <h3>Framework</h3>
+          <ul class="dense-list">
+            <li><code>Job</code> describes inputs, outputs, metadata, and completion checks.</li>
+            <li><code>Ctx</code> exposes cached inputs, output paths, and progress reporting.</li>
+            <li><code>run_jobs</code> handles skip, NAS cache, transform, upload, errors, and ETA.</li>
+            <li><code>run_distributed</code> and <code>serve_jobs</code> shard work across capture PCs.</li>
+          </ul>
+          <pre><code>from paradex.process import Job, run_jobs
 
-# viewers
-python src/process/miyungpa/web.py
-python src/process/miyungpa/visualizer.py</code></pre>
+jobs = discover()
+run_jobs(jobs, process, num_workers=4)</code></pre>
         </article>
 
         <article class="lane">
-          <h3>Object turntable reconstruction</h3>
-          <p>Extract multi-camera frames, triangulate the Charuco turntable, solve per-frame rotations, segment object masks, and triangulate a COLMAP model.</p>
-          <ol>
-            <li><code>extract_video.py</code> writes <code>images/&lt;serial&gt;/frame_*.jpg</code>.</li>
-            <li><code>extract_charuco.py</code> writes <code>charuco_3d/</code>.</li>
-            <li><code>get_rotation.py</code> writes <code>rotation/&lt;frame&gt;.npy</code>.</li>
-            <li><code>extract_mask_sam3.py</code> writes masks and masked images.</li>
-            <li><code>generate_colmap.py</code> writes <code>colmap/database.db</code> and sparse output.</li>
-          </ol>
-          <pre><code>python src/process/object_turntable/extract_video.py
-python src/process/object_turntable/extract_charuco.py
-python src/process/object_turntable/get_rotation.py
-python src/process/object_turntable/extract_mask_sam3.py
-python src/process/object_turntable/generate_colmap.py</code></pre>
+          <h3>Live pipelines</h3>
+          <div class="pipeline-list">
+            <div>
+              <strong><code>src/process/miyungpa/</code></strong>
+              <span>Robot-demo sync, overlays, contact outputs, dataset viewer.</span>
+            </div>
+            <div>
+              <strong><code>src/process/object_turntable/</code></strong>
+              <span>Video frames, Charuco, rotations, SAM3 masks, COLMAP reconstruction.</span>
+            </div>
+            <div>
+              <strong><code>src/util/upload_video/</code></strong>
+              <span>Raw-video undistort/upload worker built on the same processing contract.</span>
+            </div>
+          </div>
+          <pre><code>python src/process/miyungpa/main.py
+python src/process/object_turntable/worker.py
+python src/util/upload_video/main.py</code></pre>
         </article>
       </div>
     </section>
 
-    <section id="inference" class="section section-tint" aria-labelledby="inference-title">
-      <div class="section-head">
-        <p class="eyebrow">Stage 4</p>
-        <h2 id="inference-title">6D pose, grasp, and execution</h2>
-        <p>
-          Inference uses the calibrated camera rig to recover object pose, transform
-          candidate grasps into the robot frame, solve wrist IK, and visualize or execute.
-        </p>
-      </div>
-
-      <div class="flow-table" role="table" aria-label="Inference pipeline">
-        <div class="flow-row header" role="row">
-          <div role="columnheader">Step</div>
-          <div role="columnheader">What happens</div>
-          <div role="columnheader">Key files</div>
-        </div>
-        <div class="flow-row" role="row">
-          <div role="cell">Capture scene</div>
-          <div role="cell">Remote cameras save raw images, active camera parameters, and C2R.</div>
-          <div role="cell"><code>src/object6d/image_remote.py</code>, <code>remote_camera_controller.py</code></div>
-        </div>
-        <div class="flow-row" role="row">
-          <div role="cell">Undistort + match</div>
-          <div role="cell">Build a scene, run template matching, LoFTR, and multi-view optimization.</div>
-          <div role="cell"><code>src/object6d/capture.py</code>, external <code>_object_6d_tracking</code></div>
-        </div>
-        <div class="flow-row" role="row">
-          <div role="cell">Validate C2R</div>
-          <div role="cell">Render robot meshes into camera views and inspect overlay alignment.</div>
-          <div role="cell"><code>src/object6d/validate_c2r.py</code>, <code>RobotModule</code></div>
-        </div>
-        <div class="flow-row" role="row">
-          <div role="cell">Map grasp</div>
-          <div role="cell">Load BODex or DexGraspNet grasp, transform wrist/hand pose from object to robot frame.</div>
-          <div role="cell"><code>src/inference/bodex/</code>, <code>src/inference/grasp_w_gui/</code></div>
-        </div>
-        <div class="flow-row" role="row">
-          <div role="cell">Run IK / GUI</div>
-          <div role="cell">Solve wrist IK, then preview in Viser or expose GUI buttons for start, pregrasp, grasp, squeeze.</div>
-          <div role="cell"><code>RobotWrapper.solve_ik</code>, <code>RobotGUIController</code></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="nas-results" class="section" aria-labelledby="nas-results-title">
+    <section id="results" class="section section-tint" aria-labelledby="results-title">
       <div class="section-head">
         <p class="eyebrow">NAS samples</p>
-        <h2 id="nas-results-title">Concrete results from <code>shared_data/paradex</code></h2>
+        <h2 id="results-title">Result artifacts from <code>shared_data/paradex</code></h2>
         <p>
-          A few compact artifacts copied from the NAS make the pipeline less abstract:
-          object proposal/segmentation outputs from the 6D tracking stack, plus recorded
-          Inspire hand motion channels from a short capture.
+          Small copied artifacts keep the site grounded in real outputs: object proposal
+          examples from the perception stack and Inspire hand motion channels.
         </p>
       </div>
 
       <div class="result-hero">
         <figure>
           <img src="assets/results/cnos-qualitative.webp" alt="CNOS qualitative object segmentation examples with CAD inputs, RGB images, and SAM/FastSAM overlays." loading="lazy" />
-          <figcaption>Object-level proposal and segmentation outputs used by the 6D perception side of the stack.</figcaption>
+          <figcaption>Object proposal and segmentation outputs used before pose estimation.</figcaption>
         </figure>
       </div>
 
       <div class="result-grid">
         <article class="result-card wide">
-          <img src="assets/results/inspire-motion-summary.png" alt="Three time-series plots showing Inspire hand position, commanded action, and force channels over about ten seconds." loading="lazy" />
+          <img src="assets/results/inspire-motion-summary.png" alt="Three time-series plots showing Inspire hand position, commanded action, and force channels." loading="lazy" />
           <div>
             <h3>Inspire hand motion sample</h3>
             <p>
               Loaded from <code>inspire_motion/time.npy</code>, <code>position.npy</code>,
               <code>action.npy</code>, and <code>force.npy</code>. The clip has 209 samples
-              over 9.98 seconds, six channels, position range 386-601, action range 400-800,
-              and valid force range -1-80 after removing sentinel values.
+              over 9.98 seconds, six channels, position range 386-601, action range
+              400-800, and valid force range -1-80 after sentinel removal.
             </p>
           </div>
         </article>
 
         <article class="result-card">
           <img src="assets/results/cnos-bbq-result.webp" alt="RGB image and segmentation result highlighting a BBQ sauce bottle." loading="lazy" />
-          <h3>Single-object proposal check</h3>
-          <p>RGB-to-mask sanity view for a tabletop object: input scene, grayscale context, and highlighted proposal.</p>
+          <h3>Single-object proposal</h3>
+          <p>Input scene, grayscale context, and highlighted object proposal.</p>
         </article>
 
         <article class="result-card">
           <img src="assets/results/cnos-tools-result.webp" alt="RGB image and segmentation result highlighting surgical scissors." loading="lazy" />
-          <h3>Tool-shaped object check</h3>
-          <p>A thin object case that makes proposal quality easy to inspect before downstream pose estimation.</p>
+          <h3>Thin-object proposal</h3>
+          <p>A tool-shaped case for checking proposal quality before pose estimation.</p>
         </article>
 
         <article class="result-card wide">
           <img src="assets/results/cnos-framework.webp" alt="CNOS framework diagram showing onboarding, proposal, and matching stages." loading="lazy" />
           <div>
-            <h3>How proposals enter the object stack</h3>
+            <h3>Object stack context</h3>
             <p>
-              The NAS copy includes the CNOS framework diagram used by the object tracking
-              dependency: rendered CAD templates, RGB proposals, descriptor extraction, and
-              object-level matching. This maps directly to the <code>object6d</code> stage.
+              The copied CNOS diagram maps CAD templates, RGB proposals, descriptor
+              extraction, and object-level matching to the <code>object6d</code> stage.
             </p>
           </div>
         </article>
@@ -484,89 +377,73 @@ python src/process/object_turntable/generate_colmap.py</code></pre>
 
     <section id="validation" class="section" aria-labelledby="validation-title">
       <div class="section-head">
-        <p class="eyebrow">Operational safety</p>
-        <h2 id="validation-title">Validation, recovery, and common checks</h2>
+        <p class="eyebrow">Validation and docs</p>
+        <h2 id="validation-title">Checks before long runs</h2>
         <p>
-          Use validation scripts as stage gates. They are faster than discovering bad
-          calibration, dead capture daemons, frame drops, or robot alignment issues after
-          a full recording session.
+          The latest camera stack reports live errors, stalled frame ids, and sticky
+          capture interruption. Treat those as stage gates, not logs to ignore.
         </p>
       </div>
 
       <div class="ops-grid">
         <article>
-          <h3>Before capture</h3>
+          <h3>Camera health</h3>
           <ul>
-            <li>Confirm every capture PC daemon responds on ports <code>5480-5482</code>.</li>
-            <li>Run camera status monitor if the rig is unstable: <code>src/camera/monitor_daemon.py</code>.</li>
-            <li>Validate camera sync and hang recovery in <code>src/validate/camera_system/</code>.</li>
-            <li>Regenerate Charuco boards from <code>src/util/marker/generate_charuco.py</code> when board specs change.</li>
+            <li>Start or reset daemons before distributed capture.</li>
+            <li>Watch <code>rcc.get_status()</code> during long recordings.</li>
+            <li>Abort or restart when <code>capture_interrupted()</code> latches.</li>
           </ul>
         </article>
         <article>
-          <h3>When a run hangs</h3>
+          <h3>Geometry health</h3>
           <ul>
-            <li>Use <code>src/camera/reset_cameras.py</code> from the main PC to relaunch capture daemons.</li>
-            <li>Check idle timeout behavior if the controller died mid-session.</li>
-            <li>Inspect timestamp and frame-id arrays before processing.</li>
-            <li>Use turntable <code>check/</code> helpers to remove dropped or invalid frames before COLMAP.</li>
+            <li>Refresh downstream calibration when camera placement or robot geometry changes.</li>
+            <li>Validate <code>C2R.npy</code> with robot overlays before execution.</li>
+            <li>Use <code>ImageDict</code> and projection helpers for repeatable checks.</li>
           </ul>
         </article>
         <article>
-          <h3>Before robot execution</h3>
+          <h3>Processing health</h3>
           <ul>
-            <li>Validate <code>C2R.npy</code> with robot overlay grids.</li>
-            <li>Patch xArm URDFs with factory calibration for reliable FK/IK.</li>
-            <li>Preview grasp plans in Viser before opening the GUI controller.</li>
-            <li>Keep object marker-offset tables current under <code>src/util/register_object/</code>.</li>
+            <li>Define explicit <code>Job.done</code> checks when output presence is not enough.</li>
+            <li>Use framework progress for long frame-level work.</li>
+            <li>Keep NAS-relative paths in jobs and local-only paths inside transforms.</li>
           </ul>
         </article>
-      </div>
-    </section>
-
-    <section id="repo" class="section section-tint" aria-labelledby="repo-title">
-      <div class="section-head">
-        <p class="eyebrow">Repository guide</p>
-        <h2 id="repo-title">Where to look next</h2>
-        <p>
-          The repo separates reusable library modules from concrete applications. Start in
-          <code>src/</code> for runnable workflows, then open <code>paradex/</code> or the API
-          docs when you need implementation details.
-        </p>
       </div>
 
       <div class="repo-grid">
-        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/README.md">
-          <h3><code>README.md</code></h3>
-          <p>Project overview, install, high-level calibration and capture notes.</p>
-        </a>
-        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/src/README.md">
-          <h3><code>src/</code></h3>
-          <p>Application index: calibration, camera, capture, dataset acquisition, processing, object6d, inference, utilities, validation.</p>
-        </a>
         <a class="link-card" href="docs/index.html">
           <h3><code>docs/</code></h3>
-          <p>Generated Sphinx API and subsystem docs for camera system, robot control, capture, and processing.</p>
-        </a>
-        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/paradex">
-          <h3><code>paradex/</code></h3>
-          <p>Reusable Python library: calibration, image, IO, robot, transforms, video, visualization.</p>
+          <p>Generated Sphinx guide and API reference for the current fork.</p>
         </a>
         <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/agent_docs/README.md">
           <h3><code>agent_docs/</code></h3>
-          <p>Task-oriented orientation notes for coding agents working on specific subsystems.</p>
+          <p>Subsystem routing notes for agents and maintainers.</p>
         </a>
-        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/.github/workflows/pages.yml">
-          <h3>Pages workflow</h3>
-          <p>Static deployment workflow for publishing this guide to GitHub Pages.</p>
+        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/paradex/process">
+          <h3><code>paradex/process</code></h3>
+          <p>Reusable batch framework used by current processing apps.</p>
+        </a>
+        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/paradex/io/capture_pc">
+          <h3><code>io/capture_pc</code></h3>
+          <p>ZMQ command/data transport between the main PC and capture PCs.</p>
+        </a>
+        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/paradex/io/camera_system">
+          <h3><code>camera_system</code></h3>
+          <p>Remote daemon protocol, health telemetry, and controller API.</p>
+        </a>
+        <a class="link-card" href="https://github.com/gohyunsu/paradex/blob/main/paradex/visualization/scene">
+          <h3><code>visualization/scene</code></h3>
+          <p>Backend-agnostic Viser/Open3D scene and animation API.</p>
         </a>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <span>Paradex Pipeline Field Guide</span>
-    <span>Static site for <a href="https://github.com/gohyunsu/paradex">gohyunsu/paradex</a></span>
+    <span>Paradex System Map</span>
+    <span><a href="https://github.com/gohyunsu/paradex">gohyunsu/paradex</a></span>
   </footer>
 </body>
 </html>
