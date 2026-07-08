@@ -15,6 +15,8 @@ paradex.io.camera_system.pyspin
 Module Contents
 ---------------
 
+.. py:data:: logger
+
 .. py:data:: cam_info
 
 .. py:data:: system
@@ -214,6 +216,19 @@ Module Contents
       :type exposure_time: float, optional
 
       :raises AssertionError: If ``mode`` is not ``'single'`` or ``'continuous'``.
+
+
+
+   .. py:method:: set_gain(gain)
+
+      Apply a new gain (dB) live — Gain is writable during acquisition.
+
+
+
+   .. py:method:: set_exposure(exposure_time)
+
+      Apply a new exposure (microseconds) live — ExposureTime is writable
+      during acquisition.
 
 
 
