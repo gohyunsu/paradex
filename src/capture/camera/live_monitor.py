@@ -144,13 +144,14 @@ HTML = """<!doctype html>
     main {
       min-height: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
+      grid-template-columns: minmax(0, 1fr);
       gap: 1rem;
       padding: 1rem;
     }
     .viewer {
       min-width: 0;
-      min-height: 0;
+      min-height: 420px;
+      height: min(72vh, 780px);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #101820;
@@ -162,13 +163,13 @@ HTML = """<!doctype html>
       display: block;
       width: 100%;
       height: 100%;
-      min-height: 520px;
       object-fit: contain;
       background: #101820;
     }
     aside {
       min-width: 0;
       display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       align-content: start;
       gap: 1rem;
     }
@@ -182,6 +183,10 @@ HTML = """<!doctype html>
       margin: 0 0 0.8rem;
       font-size: 1rem;
       letter-spacing: 0;
+    }
+    .panel-status,
+    .panel-frames {
+      grid-column: span 2;
     }
     .status-line {
       display: grid;
@@ -260,11 +265,11 @@ HTML = """<!doctype html>
       font-size: 0.9em;
     }
     @media (max-width: 980px) {
-      main {
-        grid-template-columns: 1fr;
+      aside {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .viewer img {
-        min-height: 360px;
+        min-height: 0;
       }
     }
     @media (max-width: 620px) {
@@ -278,6 +283,12 @@ HTML = """<!doctype html>
       }
       .status-line {
         grid-template-columns: 1fr;
+      }
+      aside,
+      .panel-status,
+      .panel-frames {
+        grid-template-columns: 1fr;
+        grid-column: auto;
       }
     }
   </style>
@@ -299,7 +310,7 @@ HTML = """<!doctype html>
       </section>
 
       <aside>
-        <section class="panel" aria-labelledby="status-title">
+        <section class="panel panel-status" aria-labelledby="status-title">
           <h2 id="status-title">Status</h2>
           <div class="status-line">
             <span class="label">State</span>
@@ -323,17 +334,17 @@ HTML = """<!doctype html>
           </div>
         </section>
 
-        <section class="panel" aria-labelledby="pcs-title">
+        <section class="panel panel-pcs" aria-labelledby="pcs-title">
           <h2 id="pcs-title">Capture PCs</h2>
           <ul id="pcs" class="list"></ul>
         </section>
 
-        <section class="panel" aria-labelledby="frames-title">
+        <section class="panel panel-frames" aria-labelledby="frames-title">
           <h2 id="frames-title">Frames</h2>
           <ul id="frames" class="list"></ul>
         </section>
 
-        <section class="panel" aria-labelledby="run-title">
+        <section class="panel panel-run" aria-labelledby="run-title">
           <h2 id="run-title">Run</h2>
           <div class="status-line">
             <span class="label">Daemons</span>
@@ -425,8 +436,8 @@ HTML = """<!doctype html>
       setList(els.pcs, pcRows, "No daemon status");
 
       const frameRows = Object.entries(data.frames || {}).map(([name, frame]) => {
-        const srcAge = frame.source_age_ms === null ? "-" : `${Math.round(frame.source_age_ms)} ms`;
-        return item(name, `fid ${frame.frame_id} · ${frame.pc || "pc?"} · seq ${frame.seq ?? "-"} · source age ${srcAge}`);
+        const age = frame.receive_age_ms === null ? "-" : `${Math.round(frame.receive_age_ms)} ms`;
+        return item(name, `fid ${frame.frame_id} · ${frame.pc || "pc?"} · seq ${frame.seq ?? "-"} · shown age ${age}`);
       });
       setList(els.frames, frameRows, "No frames yet");
 
@@ -511,8 +522,11 @@ class CameraMonitor:
         self.starting = False
         self.error: str | None = None
         self.latest_jpeg: bytes | None = None
+        self.latest_version = 0
         self.last_frame_time: float | None = None
         self.frames: dict[str, dict[str, Any]] = {}
+        self.frame_seen_at: dict[str, float] = {}
+        self.frame_versions: dict[str, tuple[int | None, int | None]] = {}
         self.placeholder_jpeg = self._make_placeholder("Click Start stream")
 
     def start(self) -> dict[str, Any]:
@@ -547,8 +561,11 @@ class CameraMonitor:
                 self.running = True
                 self.starting = False
                 self.latest_jpeg = None
+                self.latest_version = 0
                 self.last_frame_time = None
                 self.frames = {}
+                self.frame_seen_at = {}
+                self.frame_versions = {}
                 self.collect_thread = threading.Thread(
                     target=self._collect_loop,
                     name="camera-live-monitor-collector",
@@ -580,19 +597,24 @@ class CameraMonitor:
         self._cleanup_handles(rcc, dc, cs)
         with self.frame_cond:
             self.latest_jpeg = None
+            self.latest_version = 0
             self.last_frame_time = None
             self.frames = {}
+            self.frame_seen_at = {}
+            self.frame_versions = {}
             self.frame_cond.notify_all()
         return self.status()
 
     def shutdown(self) -> None:
         self.stop()
 
-    def wait_for_jpeg(self, timeout: float = 1.0) -> bytes:
+    def wait_for_jpeg(self, after_version: int = 0, timeout: float = 1.0) -> tuple[bytes, int]:
         with self.frame_cond:
-            if self.latest_jpeg is None:
-                self.frame_cond.wait(timeout=timeout)
-            return self.latest_jpeg or self.placeholder_jpeg
+            self.frame_cond.wait_for(
+                lambda: self.latest_jpeg is not None and self.latest_version > after_version,
+                timeout=timeout,
+            )
+            return self.latest_jpeg or self.placeholder_jpeg, self.latest_version
 
     def status(self) -> dict[str, Any]:
         with self.lifecycle_lock:
@@ -647,7 +669,10 @@ class CameraMonitor:
                 img_dict: dict[str, Any] = {}
                 img_text: dict[str, str] = {}
                 frames: dict[str, dict[str, Any]] = {}
-                now_ns = time.time_ns()
+                now = time.time()
+                with self.frame_cond:
+                    frame_seen_at = dict(self.frame_seen_at)
+                    frame_versions = dict(self.frame_versions)
 
                 for item_name, item_data in sorted(all_data.items()):
                     if item_data.get("type") != "image":
@@ -665,8 +690,11 @@ class CameraMonitor:
                     name = str(item_name)
                     frame_id = self._as_int(item_data.get("frame_id"), 0)
                     seq = self._as_int(item_data.get("seq"), None)
-                    ts_ns = self._as_int(item_data.get("ts_ns"), None)
-                    source_age_ms = None if ts_ns is None else max(0.0, (now_ns - ts_ns) / 1_000_000.0)
+                    version = (frame_id, seq)
+                    if frame_versions.get(name) != version:
+                        frame_versions[name] = version
+                        frame_seen_at[name] = now
+                    receive_age_ms = max(0.0, (now - frame_seen_at.get(name, now)) * 1000.0)
 
                     img_dict[name] = image
                     img_text[name] = f"fid {frame_id}"
@@ -675,7 +703,7 @@ class CameraMonitor:
                         "pc": str(item_data.get("pc", "")),
                         "src": str(item_data.get("src", "")),
                         "seq": seq,
-                        "source_age_ms": source_age_ms,
+                        "receive_age_ms": receive_age_ms,
                     }
 
                 if img_dict:
@@ -688,8 +716,15 @@ class CameraMonitor:
                     if ok:
                         with self.frame_cond:
                             self.latest_jpeg = encoded.tobytes()
+                            self.latest_version += 1
                             self.last_frame_time = time.time()
                             self.frames = frames
+                            self.frame_seen_at = {
+                                name: seen_at for name, seen_at in frame_seen_at.items() if name in frames
+                            }
+                            self.frame_versions = {
+                                name: version for name, version in frame_versions.items() if name in frames
+                            }
                             self.frame_cond.notify_all()
             except Exception as exc:
                 with self.lifecycle_lock:
@@ -807,18 +842,22 @@ class CameraMonitorHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
         self.send_header("Cache-Control", "no-store")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("X-Accel-Buffering", "no")
         self.end_headers()
-        period = 1.0 / max(1, self.server.monitor.ui_fps)
+        last_version = 0
         while True:
             try:
-                jpeg = self.server.monitor.wait_for_jpeg(timeout=1.0)
+                jpeg, last_version = self.server.monitor.wait_for_jpeg(
+                    after_version=last_version,
+                    timeout=2.0,
+                )
                 self.wfile.write(b"--frame\r\n")
                 self.wfile.write(b"Content-Type: image/jpeg\r\n")
                 self.wfile.write(f"Content-Length: {len(jpeg)}\r\n\r\n".encode("ascii"))
                 self.wfile.write(jpeg)
                 self.wfile.write(b"\r\n")
                 self.wfile.flush()
-                time.sleep(period)
             except (BrokenPipeError, ConnectionResetError):
                 break
 
@@ -832,7 +871,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pc", action="append", dest="pcs", help="Capture PC name. Repeat to override system/current.")
     parser.add_argument("--camera-fps", type=int, default=10, help="Camera acquisition FPS for preview.")
     parser.add_argument("--ui-fps", type=int, default=10, help="MJPEG refresh FPS.")
-    parser.add_argument("--jpeg-quality", type=int, default=82, help="Merged preview JPEG quality, 1-100.")
+    parser.add_argument("--jpeg-quality", type=int, default=72, help="Merged preview JPEG quality, 1-100.")
     parser.add_argument("--auto-start", action="store_true", help="Start streaming when the server boots.")
     parser.add_argument("--no-launch-clients", action="store_true", help="Assume stream_client.py is already running.")
     parser.add_argument("--remote-log", action="store_true", help="Write remote stream_client output to test.log.")

@@ -27,7 +27,7 @@ while not exit_event.is_set():
         # Only send if we have a new frame
         if frame_id > last_frame_ids[camera_name] and frame_id > 0:
             image = cv2.resize(image, (image.shape[1]//8, image.shape[0]//8))
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 85]
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
             success, encoded_image = cv2.imencode('.jpg', image, encode_param)
             
             if success:
