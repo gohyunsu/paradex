@@ -1058,7 +1058,10 @@ class CameraMonitorHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
-        self.wfile.write(payload)
+        try:
+            self.wfile.write(payload)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _send_camera_mjpeg(self, name: str) -> None:
         if not name:
