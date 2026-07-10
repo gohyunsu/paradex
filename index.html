@@ -23,6 +23,7 @@
         <a href="#capture">Capture</a>
         <a href="#processing">Processing</a>
         <a href="#results">Results</a>
+        <a href="#validation">Validate</a>
         <a href="docs/index.html">Docs</a>
       </div>
     </nav>
@@ -492,6 +493,115 @@ python src/util/upload_video/main.py</code></pre>
           The latest camera stack reports live errors, stalled frame ids, and sticky
           capture interruption. Treat those as stage gates, not logs to ignore.
         </p>
+      </div>
+
+      <div class="validation-ladder" aria-label="Recommended validation task ladder">
+        <article class="validation-card accent-green">
+          <div class="validation-head">
+            <span class="level-tag">Easy</span>
+            <h3>Offline sanity checks</h3>
+          </div>
+          <p>
+            Start here when you want fast signal without moving hardware. This checks
+            timeout behavior and the 3D viewer stack.
+          </p>
+          <pre><code>python src/validate/camera_system/hang_recovery_mock.py
+python src/validate/visualizer/franka.py</code></pre>
+          <ul>
+            <li>Run on the main PC or any dev machine with the Paradex environment.</li>
+            <li>Pass: mock recovery prints PASS; Viser prints a URL and renders the Franka URDF.</li>
+          </ul>
+        </article>
+
+        <article class="validation-card accent-blue">
+          <div class="validation-head">
+            <span class="level-tag">Medium</span>
+            <h3>Main PC to capture PC transport</h3>
+          </div>
+          <p>
+            Use this before camera work. It validates SSH launch, telemetry return,
+            and keyboard command delivery across capture PCs.
+          </p>
+          <pre><code>python src/validate/data_sender/main.py
+python src/validate/command_sender/stream_remote.py</code></pre>
+          <ul>
+            <li>Run on the main PC; clients are SSH-launched on capture PCs.</li>
+            <li>Pass: each PC prints increasing <code>{'value': seconds}</code> data.</li>
+            <li>Controls: <code>c</code> start, <code>s</code> stop, <code>q</code> quit for command sender.</li>
+          </ul>
+        </article>
+
+        <article class="validation-card accent-teal">
+          <div class="validation-head">
+            <span class="level-tag">Medium+</span>
+            <h3>Camera acquisition path</h3>
+          </div>
+          <p>
+            Run this after transport passes. It checks camera loading, live frames,
+            remote recording, and the current daemon protocol.
+          </p>
+          <pre><code>python src/validate/camera_system/camera_loader.py
+python src/validate/camera_system/camera_reader.py
+python src/validate/camera_system/remote_camera_controller.py</code></pre>
+          <ul>
+            <li>Run on the main PC after camera daemons are up on capture PCs.</li>
+            <li>Pass: no <code>get_all_errors()</code> entries, live merged grid advances, Enter stops recording cleanly.</li>
+          </ul>
+        </article>
+
+        <article class="validation-card accent-amber">
+          <div class="validation-head">
+            <span class="level-tag">Hard</span>
+            <h3>Sync and calibration quality</h3>
+          </div>
+          <p>
+            Use this when the dataset depends on accurate multi-camera timing and
+            camera-to-robot geometry.
+          </p>
+          <pre><code>python src/validate/camera_system/sync_check.py --view
+python src/validate/calibration/extrinsic_drift.py
+python src/validate/calibration/compare_xarm_kinematic_calib.py --no_overlay</code></pre>
+          <ul>
+            <li>Run sync checks with hardware trigger available; run calibration checks on existing hand-eye sessions.</li>
+            <li>Pass: frame IDs stay within tolerance; per-camera drift is small; calibrated URDF lowers residuals.</li>
+          </ul>
+        </article>
+
+        <article class="validation-card accent-coral">
+          <div class="validation-head">
+            <span class="level-tag">Hard+</span>
+            <h3>Robot and hand execution</h3>
+          </div>
+          <p>
+            Reserve this for cleared workspaces. It validates real motion, hand
+            command tracking, and camera/robot overlay alignment.
+          </p>
+          <pre><code>python src/validate/robot/xarm_base_wiggle.py
+python src/validate/robot/inspire_left.py
+python src/validate/robot/inspire_left_overlay.py</code></pre>
+          <ul>
+            <li>Run only with the correct robot connected and the workspace clear.</li>
+            <li>Pass: arm motion is smooth, reported hand angles track targets, overlay mesh aligns with images.</li>
+          </ul>
+        </article>
+
+        <article class="validation-card accent-blue">
+          <div class="validation-head">
+            <span class="level-tag">Data</span>
+            <h3>Processed video and NAS upload</h3>
+          </div>
+          <p>
+            Use this after a capture session exists. It checks raw video undistortion,
+            progress reporting, and shared-storage upload.
+          </p>
+          <pre><code>python src/validate/upload_raw_video/upload_local.py
+# For one file, edit the hardcoded path first:
+python src/validate/upload_raw_video/test_func.py</code></pre>
+          <ul>
+            <li>No robot motion required; raw videos and camera intrinsics must exist.</li>
+            <li>Pass: frames are processed, ETA advances, and the run ends with completed/success.</li>
+          </ul>
+        </article>
       </div>
 
       <div class="ops-grid">

@@ -355,6 +355,7 @@ h3 {
 .update-grid,
 .topology-grid,
 .mode-grid,
+.validation-ladder,
 .ops-grid,
 .repo-grid {
   display: grid;
@@ -380,6 +381,11 @@ h3 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.validation-ladder {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
 .repo-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 1rem;
@@ -390,6 +396,7 @@ h3 {
 .update-card,
 .system-card,
 .mode-card,
+.validation-card,
 .lane,
 .result-card,
 .ops-grid article,
@@ -405,6 +412,7 @@ h3 {
 .update-card,
 .system-card,
 .mode-card,
+.validation-card,
 .ops-grid article,
 .link-card,
 .lane {
@@ -416,6 +424,8 @@ h3 {
 .update-card p,
 .system-card li,
 .mode-card p,
+.validation-card p,
+.validation-card li,
 .lane li,
 .lane p,
 .result-card p,
@@ -459,6 +469,60 @@ h3 {
 .accent-teal { border-left-color: var(--teal); }
 .accent-green { border-left-color: var(--green); }
 .accent-amber { border-left-color: var(--amber); }
+.accent-coral { border-left-color: var(--coral); }
+
+.validation-card {
+  border-left-width: 5px;
+}
+
+.validation-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.validation-head h3 {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+
+.level-tag {
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  color: var(--teal-dark);
+  background: var(--soft);
+  font-size: 0.72rem;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.validation-card pre {
+  margin: 0.9rem 0;
+  font-size: 0.84rem;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+}
+
+.validation-card pre code {
+  display: block;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.validation-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.validation-card li {
+  margin: 0.42rem 0;
+}
 
 .io-strip {
   display: grid;
@@ -656,6 +720,7 @@ h3 {
   .term-grid,
   .update-grid,
   .process-lanes,
+  .validation-ladder,
   .result-card.wide,
   .repo-grid {
     grid-template-columns: 1fr;
