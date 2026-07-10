@@ -13,7 +13,7 @@ controller, and hardware sync via the UTGE900 signal generator + timestamp monit
 | `camera_loader.py` | Multi-cam `CameraLoader`: cycle `full` (with error polling) → `image`, twice. |
 | `camera_reader.py` | `CameraLoader` in `stream` mode + `MultiCameraReader.get_images`, display merged grid with `cv2.imshow`. |
 | `camera_reader_remote.py` | Bare `MultiCameraReader()` init/close (intended to run on a capture PC against running daemons). |
-| `remote_camera_controller.py` | Main-PC side: `remote_camera_controller` records `video` on all capture PCs, Enter to stop. |
+| `remote_camera_controller.py` | Main-PC side: bounded `remote_camera_controller` smoke test; starts daemon acquisition, checks every camera frame id, then stops. Optional `--sync` / `--record PATH`. |
 | `signal_generator.py` | Start UTGE900 at 30 fps for 5 s, then stop. |
 | `signal_generator_debug.py` | Byte-identical duplicate of `signal_generator.py`. |
 | `timestamp.py` | Run `TimestampMonitor` + UTGE900 together for 10 s to verify trigger timestamps; `q` to quit. |
@@ -36,7 +36,8 @@ python src/validate/camera_system/camera_sync.py       # syncMode video (needs s
 # Main PC
 python src/validate/camera_system/camera_loader.py     # multi-cam full/image cycle
 python src/validate/camera_system/camera_reader.py     # live merged stream view
-python src/validate/camera_system/remote_camera_controller.py  # record video on all capture PCs (Enter=stop)
+python src/validate/camera_system/remote_camera_controller.py  # free-run daemon acquisition smoke test
+python src/validate/camera_system/remote_camera_controller.py --record validation/run1
 
 # Hardware sync (main PC, talks to signal-generator IP from network_info)
 python src/validate/camera_system/signal_generator.py  # 30 fps for 5 s
@@ -50,8 +51,7 @@ python src/validate/camera_system/hang_recovery.py --interactive   # + LAN-pull 
 python src/validate/camera_system/hang_recovery_mock.py    # logic only, no hardware (PASS here)
 ```
 
-Keyboard: `timestamp.py` uses `q` to set the end event; `remote_camera_controller.py`
-waits on **Enter** at an `input()` prompt to stop.
+Keyboard: `timestamp.py` uses `q` to set the end event.
 
 ## What it validates
 - `pyspin_camera.py` / `camera.py`: each step prints success/failure per serial — a passing

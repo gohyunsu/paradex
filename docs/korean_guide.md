@@ -164,16 +164,22 @@ python src/validate/command_sender/stream_remote.py
 camera daemon과 실제 camera가 준비된 뒤 실행한다.
 
 ```bash
+python src/validate/camera_system/remote_camera_controller.py
+
+# Direct local/capture-PC checks only:
 python src/validate/camera_system/camera_loader.py
 python src/validate/camera_system/camera_reader.py
-python src/validate/camera_system/remote_camera_controller.py
 ```
+
+`remote_camera_controller.py`는 main PC에서 실행한다. `camera_loader.py`와
+`camera_reader.py`는 카메라를 직접 소유한 capture PC 또는 local camera machine에서만
+실행한다.
 
 통과 기준:
 
-- `get_all_errors()`가 비어 있다.
-- live image grid의 frame id가 증가한다.
-- recording start/stop이 hang 없이 끝난다.
+- capture PC별 expected/detected camera count가 맞는다.
+- 모든 camera serial의 frame id가 양수가 된다.
+- `error`, `stalled`, `capture_interrupted`가 false/empty 상태다.
 
 ### 6.4 Sync / calibration
 

@@ -284,10 +284,21 @@ python src/validate/command_sender/stream_remote.py</code></pre>
               </p>
 
               <h3>6.3 Camera path</h3>
-              <pre><code>python src/validate/camera_system/camera_loader.py
-python src/validate/camera_system/camera_reader.py
-python src/validate/camera_system/remote_camera_controller.py</code></pre>
-              <p>통과 기준: <code>get_all_errors()</code>가 비어 있고, live image grid의 frame id가 증가하며, recording start/stop이 hang 없이 끝난다.</p>
+              <pre><code>python src/validate/camera_system/remote_camera_controller.py
+
+# Direct local/capture-PC checks only:
+python src/validate/camera_system/camera_loader.py
+python src/validate/camera_system/camera_reader.py</code></pre>
+              <p>
+                <code>remote_camera_controller.py</code>는 main PC에서 실행한다.
+                <code>camera_loader.py</code>와 <code>camera_reader.py</code>는 카메라를 직접 소유한
+                capture PC 또는 local camera machine에서만 실행한다.
+              </p>
+              <p>
+                통과 기준: capture PC별 expected/detected camera count가 맞고, 모든 camera serial의
+                frame id가 양수가 되며, <code>error</code>, <code>stalled</code>,
+                <code>capture_interrupted</code>가 false/empty 상태다.
+              </p>
 
               <h3>6.4 Sync / calibration</h3>
               <pre><code>python src/validate/camera_system/sync_check.py --view

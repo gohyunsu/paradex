@@ -6,15 +6,15 @@ Validates the raw-video pipeline: undistorting captured `.avi` videos and upload
 | File | Purpose |
 |------|---------|
 | `upload_local.py` | Runs the full `RawVideoProcessor` pipeline (process all raw videos, then wait and monitor progress) — the real entry point. |
-| `test_func.py` | Standalone test of the per-video worker `undistort_raw_video()`: undistorts a single hardcoded `.avi`, writes it locally, and rsyncs to the shared NAS path while reporting progress. |
+| `test_func.py` | Standalone test of the per-video worker `undistort_raw_video()`: undistorts one `.avi`, writes it locally, and rsyncs to the shared NAS path while reporting progress. |
 
 ## Usage
 ```bash
 # Full pipeline (processes all raw videos found by RawVideoProcessor)
 python src/validate/upload_raw_video/upload_local.py
 
-# Single-file worker test (edit the hardcoded path inside first)
-python src/validate/upload_raw_video/test_func.py
+# Single-file worker test. Use a copied validation clip unless deleting the input is intended.
+python src/validate/upload_raw_video/test_func.py /path/to/raw/videos/<serial>.avi
 ```
 
 No robot/camera hardware required. Requires:
@@ -22,7 +22,9 @@ No robot/camera hardware required. Requires:
 - Camera intrinsics loadable via `load_camparam` for the matching serial.
 - `rsync` available and the shared/NAS path mounted/reachable.
 
-`test_func.py` has a hardcoded input path at the bottom of the file — edit it to point at a real local `.avi` before running.
+`test_func.py` takes the input path as a CLI argument. The underlying worker deletes
+the input file after successful upload, so use a copied validation clip unless
+deleting the original raw video is intended.
 
 ## What it validates
 - A raw video is read, every frame is undistorted (`apply_undistort_map`) with the per-camera map, and re-encoded (MJPG) to `<root>/videos/<serial>.avi`.
