@@ -11,6 +11,7 @@ architecture, daemon lifecycle, heartbeat semantics, and recovery guide, read
 | distributed still images | `image_remote.py` | main PC | yes |
 | distributed video | `video_remote.py` | main PC | yes |
 | distributed live preview | `stream_remote.py` | main PC | yes |
+| browser multi-view preview | `live_monitor.py` | main PC | yes |
 | single-PC still images | `image.py` | capture/local PC | no |
 | single-PC video | `video.py` | capture/local PC | no |
 | single-PC stream | `stream.py` | capture/local PC | no |
@@ -54,6 +55,17 @@ Distributed preview:
 python src/capture/camera/stream_remote.py
 ```
 
+Browser multi-view preview:
+
+```bash
+python src/capture/camera/live_monitor.py --host 0.0.0.0 --port 8792
+```
+
+Open `http://<main-pc>:8792`, then press **Start stream**. This SSH-launches
+`stream_client.py` on capture PCs, arms acquisition with `remote_camera_controller`,
+and displays the merged low-latency JPEG preview in the browser. Press **Stop**
+before closing the terminal so the remote stream clients receive `exit`.
+
 Single-PC/local:
 
 ```bash
@@ -70,8 +82,9 @@ Keyboard convention:
 | `s` | stop |
 | `q` | quit |
 
-`stream_remote.py` is preview-only and SSH-launches `stream_client.py`; do not run
-`stream_client.py` by hand for the normal workflow.
+`stream_remote.py` and `live_monitor.py` are preview-only and SSH-launch
+`stream_client.py`; do not run `stream_client.py` by hand for the normal workflow
+unless you pass `live_monitor.py --no-launch-clients`.
 
 ## Output Shape
 

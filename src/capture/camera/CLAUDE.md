@@ -10,6 +10,7 @@ the canonical camera-system guide is `docs/camera_system.md`.
 | distributed stills | `image_remote.py` | main PC | `remote_camera_controller` |
 | distributed video | `video_remote.py` | main PC | `remote_camera_controller` |
 | distributed preview | `stream_remote.py` | main PC | `remote_camera_controller` + `stream_client.py` |
+| browser multi-view preview | `live_monitor.py` | main PC | `remote_camera_controller` + `stream_client.py` + MJPEG |
 | local stills | `image.py` | capture/local PC | `CameraLoader` |
 | local video | `video.py` | capture/local PC | `CameraLoader` |
 | local preview | `stream.py` | capture/local PC | `CameraLoader` |
@@ -31,6 +32,9 @@ validation or single-PC use.
   opens only in `server_daemon.py -> CameraLoader -> Camera -> PyspinCamera`.
 - `server_daemon.py` must already be running on every capture PC.
 - Keyboard convention: `c` capture/start, `s` stop, `q` quit.
+- `live_monitor.py` exposes Start/Stop over HTTP but still uses the same daemon
+  and stream-client path as `stream_remote.py`; it is preview-only, not dataset
+  recording.
 
 ## Local Details Worth Preserving
 
@@ -38,5 +42,8 @@ validation or single-PC use.
 - `video.py` uses `--frame_rate`; `video_remote.py` uses `--fps`.
 - `stream_remote.py` SSH-launches `stream_client.py`; do not run
   `stream_client.py` by hand for the normal preview workflow.
+- `live_monitor.py --host 0.0.0.0 --port 8792` serves the browser monitor on the
+  main PC. The Start button launches `stream_client.py`; the Stop button sends
+  its `exit` command with a short timeout.
 - Remote output paths are passed as relative `shared_data/<save_path>/<ts>/raw`;
   camera params are snapshotted from the main PC next to the capture root.

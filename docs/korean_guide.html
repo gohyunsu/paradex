@@ -129,6 +129,7 @@
         <nav class="ko-doc-links" aria-label="Documentation links">
           <a href="../index.html">System map</a>
           <a href="index.html">Docs home</a>
+          <a href="live_camera_ui.html">Live camera UI</a>
           <a href="franka_setup.html">Franka setup</a>
           <a href="autoapi/index.html">API reference</a>
         </nav>
@@ -144,6 +145,7 @@
             <li><a href="#flow">4. 실행 흐름</a></li>
             <li><a href="#config">5. 설정 파일</a></li>
             <li><a href="#validation">6. Validation 순서</a></li>
+            <li><a href="#live-ui">6.3.1 실시간 UI</a></li>
             <li><a href="#franka">7. Franka로 돌릴 때</a></li>
             <li><a href="#terms">8. 용어 정리</a></li>
             <li><a href="#related">9. 관련 문서</a></li>
@@ -300,6 +302,22 @@ python src/validate/camera_system/camera_reader.py</code></pre>
                 <code>capture_interrupted</code>가 false/empty 상태다.
               </p>
 
+              <h3 id="live-ui">6.3.1 실시간 multi-view UI</h3>
+              <pre><code>python src/camera/reset_cameras.py
+python src/capture/camera/live_monitor.py --host 0.0.0.0 --port 8792</code></pre>
+              <p>
+                브라우저에서 <code>http://&lt;main-pc&gt;:8792</code>를 열고
+                <strong>Start stream</strong>을 누른다. 이 버튼은 capture PC에
+                <code>stream_client.py</code>를 SSH로 띄우고,
+                <code>remote_camera_controller</code>로 acquisition을 arm한 뒤 stream sink를 켠다.
+              </p>
+              <p>
+                화면에는 병합된 저해상도 JPEG preview, capture PC 상태, camera frame id,
+                frame age가 표시된다. 이 UI는 preview용이므로 dataset 저장은
+                <code>image_remote.py</code>, <code>video_remote.py</code>, dataset acquisition script를 사용한다.
+                닫기 전 <strong>Stop</strong>을 눌러 capture PC의 preview client를 종료한다.
+              </p>
+
               <h3>6.4 Sync / calibration</h3>
               <pre><code>python src/validate/camera_system/sync_check.py --view
 python src/validate/calibration/extrinsic_drift.py
@@ -366,6 +384,7 @@ python src/validate/robot/inspire_left_overlay.py</code></pre>
                 <li><a class="reference internal" href="dataset_acquisition.html">Dataset Acquisition</a></li>
                 <li><a class="reference internal" href="process.html">Video Processing</a></li>
                 <li><a class="reference internal" href="franka_setup.html">Franka FR3 Setup Notes</a></li>
+                <li><a class="reference internal" href="live_camera_ui.html">Live Camera UI</a></li>
                 <li><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
               </ul>
             </section>

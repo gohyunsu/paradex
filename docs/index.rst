@@ -14,6 +14,7 @@ the ``paradex`` package source, so it always matches the code.
 
    camera_system
    korean_guide
+   live_camera_ui
    calibration
    robot
    capture

@@ -20,6 +20,7 @@
         <a href="#updates">Updates</a>
         <a href="#system">System</a>
         <a href="#runtime">Runtime</a>
+        <a href="#live-ui">Live UI</a>
         <a href="#capture">Capture</a>
         <a href="#processing">Processing</a>
         <a href="#results">Results</a>
@@ -41,6 +42,7 @@
         <div class="hero-actions" aria-label="Primary actions">
           <a class="button primary" href="#overview">What it does</a>
           <a class="button" href="#system">View pipeline</a>
+          <a class="button" href="#live-ui">Live camera UI</a>
           <a class="button" href="docs/index.html">Open docs</a>
           <a class="button" href="docs/korean_guide.html">한국어 가이드</a>
         </div>
@@ -234,8 +236,12 @@
           <p><code>src/util/camera_tuning/remote_tuner.py</code> adjusts per-camera exposure/gain through running daemons and saves <code>camera.json</code>.</p>
         </article>
         <article class="update-card">
+          <h3>Browser camera monitor</h3>
+          <p><code>src/capture/camera/live_monitor.py</code> serves a Start/Stop UI for low-latency merged multi-view preview on the main PC.</p>
+        </article>
+        <article class="update-card">
           <h3>Docs expanded</h3>
-          <p>Generated docs now cover calibration, dataset acquisition, image ops, process, camera protocol, transport, and scene visualization.</p>
+          <p>Generated and static docs now cover calibration, dataset acquisition, live preview, process, camera protocol, transport, and scene visualization.</p>
         </article>
       </div>
     </section>
@@ -331,6 +337,41 @@
       </div>
     </section>
 
+    <section id="live-ui" class="section" aria-labelledby="live-ui-title">
+      <div class="section-head">
+        <p class="eyebrow">Live camera UI</p>
+        <h2 id="live-ui-title">Check the multi-view rig from a browser</h2>
+        <p>
+          The first UI entry point is a main-PC web monitor for live camera preview.
+          It uses the existing remote camera daemons and stream clients, so it
+          validates the same path used by command-line preview.
+        </p>
+      </div>
+
+      <div class="process-lanes">
+        <article class="lane">
+          <h3>Run on the main PC</h3>
+          <pre><code>python src/camera/reset_cameras.py
+
+python src/capture/camera/live_monitor.py \
+  --host 0.0.0.0 \
+  --port 8792</code></pre>
+          <p>Open <code>http://&lt;main-pc&gt;:8792</code> and press <strong>Start stream</strong>.</p>
+        </article>
+
+        <article class="lane">
+          <h3>What it controls</h3>
+          <ul class="dense-list">
+            <li>SSH-launches <code>stream_client.py</code> on capture PCs.</li>
+            <li>Arms acquisition through <code>remote_camera_controller</code>.</li>
+            <li>Enables the live stream sink with <code>rcc.set_stream(True)</code>.</li>
+            <li>Shows merged JPEG preview, capture-PC status, frame IDs, and frame age.</li>
+            <li>Stop sends <code>exit</code> to remote preview clients.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
     <section id="capture" class="section section-tint" aria-labelledby="capture-title">
       <div class="section-head">
         <p class="eyebrow">Capture model</p>
@@ -361,6 +402,14 @@ rcc.snapshot("capture/demo/check", count=1)
 rcc.set_record(on=False)
 rcc.stop()
 rcc.end()</code></pre>
+        </article>
+
+        <article class="mode-card">
+          <h3>Browser multi-view preview</h3>
+          <p>Preview camera health and framing without opening an OpenCV window on the main PC.</p>
+          <pre><code>python src/capture/camera/live_monitor.py \
+  --host 0.0.0.0 \
+  --port 8792</code></pre>
         </article>
 
         <article class="mode-card">
@@ -642,6 +691,10 @@ python src/validate/upload_raw_video/test_func.py \
         <a class="link-card" href="docs/franka_setup.html">
           <h3>Franka setup</h3>
           <p>Current FR3 support status, ROS 2 setup path, and the ported Franka hand-eye flow.</p>
+        </a>
+        <a class="link-card" href="docs/live_camera_ui.html">
+          <h3>Live camera UI</h3>
+          <p>Browser-based Start/Stop monitor for merged multi-view camera preview on the main PC.</p>
         </a>
         <a class="link-card" href="docs/index.html">
           <h3><code>docs/</code></h3>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Camera UI - Paradex</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <main class="section">
+    <div class="section-head">
+      <p class="eyebrow">Camera operations</p>
+      <h1>Live camera UI</h1>
+      <p>Run this on the main PC to verify multi-view camera liveness, framing, frame IDs, and daemon health before recording or robot motion.</p>
+    </div>
+
+    <div class="process-lanes">
+      <article class="lane">
+        <h3>Start the monitor</h3>
+        <pre><code># Capture-PC camera daemons must already be up.
+python src/camera/reset_cameras.py
+
+# Start the browser monitor on the main PC.
+python src/capture/camera/live_monitor.py \
+  --host 0.0.0.0 \
+  --port 8792</code></pre>
+        <p>Open <code>http://&lt;main-pc&gt;:8792</code>, then press <strong>Start stream</strong>.</p>
+      </article>
+
+      <article class="lane">
+        <h3>Runtime path</h3>
+        <ul class="dense-list">
+          <li>SSH-launches <code>src/capture/camera/stream_client.py</code> on capture PCs.</li>
+          <li>Creates <code>remote_camera_controller("camera_live_monitor")</code>.</li>
+          <li>Runs <code>rcc.arm(syncMode=False, fps=10)</code>.</li>
+          <li>Turns on the stream sink with <code>rcc.set_stream(True)</code>.</li>
+          <li>Collects JPEG previews through <code>DataCollector</code> on port <code>1234</code>.</li>
+        </ul>
+      </article>
+    </div>
+
+    <section class="section-head">
+      <p class="eyebrow">Scope</p>
+      <h2>Preview, not dataset recording</h2>
+      <p>
+        <code>stream_client.py</code> downsamples each camera image by 8x and publishes
+        JPEG frames. Use this UI for framing, liveness, frame ID progress, and daemon
+        health. Use capture scripts for saved datasets.
+      </p>
+    </section>
+
+    <div class="flow-table" role="table" aria-label="Live camera UI controls">
+      <div class="flow-row header" role="row">
+        <div role="columnheader">Control</div>
+        <div role="columnheader">Action</div>
+        <div role="columnheader">Expected result</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">Start stream</div>
+        <div role="cell">Launch preview clients, arm acquisition, enable stream sink.</div>
+        <div role="cell">Merged multi-camera JPEG preview appears in the browser.</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">Stop</div>
+        <div role="cell">Stop acquisition, close collector, send <code>exit</code> to stream clients.</div>
+        <div role="cell">Remote preview clients exit instead of staying alive on capture PCs.</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">Refresh</div>
+        <div role="cell">Reload status JSON.</div>
+        <div role="cell">Capture-PC status, frame IDs, and source age update.</div>
+      </div>
+    </div>
+
+    <section class="section-head">
+      <p class="eyebrow">Troubleshooting</p>
+      <h2>If the UI shows no frames</h2>
+    </section>
+
+    <div class="ops-grid">
+      <article>
+        <h3>Check daemons</h3>
+        <ul>
+          <li>Each capture PC should run <code>src/camera/server_daemon.py</code>.</li>
+          <li>Use <code>python src/validate/camera_system/remote_camera_controller.py</code> for daemon health and camera counts.</li>
+        </ul>
+      </article>
+      <article>
+        <h3>Check transport</h3>
+        <ul>
+          <li>Use <code>python src/validate/data_sender/main.py</code> for data return.</li>
+          <li>Use <code>--remote-log</code> to write stream-client output to <code>test.log</code> on capture PCs.</li>
+        </ul>
+      </article>
+    </div>
+
+    <section class="section-head">
+      <p class="eyebrow">Options</p>
+      <h2>Useful command variants</h2>
+    </section>
+    <pre><code>python src/capture/camera/live_monitor.py \
+  --host 0.0.0.0 \
+  --port 8792 \
+  --camera-fps 10 \
+  --ui-fps 10 \
+  --remote-log
+
+python src/capture/camera/live_monitor.py \
+  --pc capture1 \
+  --pc capture2
+
+python src/capture/camera/live_monitor.py --no-launch-clients</code></pre>
+
+    <section class="section-head">
+      <p><a href="live_camera_ui.md">Markdown source</a> · <a href="../index.html">Back to system map</a></p>
+    </section>
+  </main>
+</body>
+</html>
