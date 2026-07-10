@@ -16,6 +16,7 @@
       </a>
       <div class="nav-links">
         <a href="#overview">What</a>
+        <a href="#terms">Terms</a>
         <a href="#updates">Updates</a>
         <a href="#system">System</a>
         <a href="#runtime">Runtime</a>
@@ -29,11 +30,11 @@
     <section id="top" class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
         <p class="eyebrow">Distributed robot data pipeline</p>
-        <h1 id="hero-title">Paradex builds robot datasets from camera rigs</h1>
+        <h1 id="hero-title">Paradex makes robot experiment data usable</h1>
         <p class="tagline">
-          It records synchronized cameras and robot state, calibrates camera-to-robot
-          geometry, processes sessions on NAS, and validates object pose, grasp, and
-          execution checks.
+          It records what multiple cameras see and what the robot is doing at the
+          same time, aligns those streams into one dataset, then checks whether
+          perception and grasp results are ready for robot execution.
         </p>
         <div class="hero-actions" aria-label="Primary actions">
           <a class="button primary" href="#overview">What it does</a>
@@ -61,17 +62,17 @@
           <article class="node node-blue">
             <span>01</span>
             <strong>Calibrate</strong>
-            <small>intrinsic, extrinsic, hand-eye, C2R</small>
+            <small>camera settings and camera-to-robot alignment</small>
           </article>
           <article class="node node-teal">
             <span>02</span>
             <strong>Acquire</strong>
-            <small>daemon, rcc, record/stream/snapshot</small>
+            <small>remote cameras, recording, streaming, snapshots</small>
           </article>
           <article class="node node-green">
             <span>03</span>
             <strong>Persist</strong>
-            <small>raw sessions, camera params, NAS roots</small>
+            <small>raw sessions, camera parameters, shared storage</small>
           </article>
           <article class="node node-amber">
             <span>04</span>
@@ -81,11 +82,12 @@
           <article class="node node-coral">
             <span>05</span>
             <strong>Infer</strong>
-            <small>6D pose, grasp, IK, execution check</small>
+            <small>object pose, grasp plan, robot-motion check</small>
           </article>
         </div>
         <figcaption>
-          Main PC coordinates. Capture PCs own cameras. Shared storage is the contract.
+          One main PC coordinates the run. Capture PCs own the cameras. Shared storage
+          keeps the recorded data and processed outputs in one place.
         </figcaption>
       </figure>
     </section>
@@ -98,48 +100,102 @@
         <h2 id="overview-title">A lab pipeline for seeing, recording, processing, and acting</h2>
         <p>
           Paradex is not one model or one demo script. It is the glue around a
-          manipulation rig: it gets synchronized camera data and robot state into a
-          calibrated dataset, processes that dataset into usable artifacts, then feeds
-          pose, grasp, and robot-control checks.
+          robot manipulation setup: it gets camera views and robot state into the same
+          timeline, turns that recording into a calibrated dataset, and produces the
+          checks needed before perception results are used to move a robot.
         </p>
       </div>
 
       <div class="purpose-grid">
         <article class="purpose-card accent-blue">
           <span class="purpose-index">01</span>
-          <h3>Run the rig</h3>
-          <p>Main PC scripts command capture-PC camera daemons, robot arms, hands, teleop devices, hardware sync, and current machine config.</p>
+          <h3>Run the robot setup</h3>
+          <p>Main PC scripts coordinate camera computers, robot arms, robot hands, teleoperation devices, hardware sync, and per-machine config.</p>
         </article>
         <article class="purpose-card accent-green">
           <span class="purpose-index">02</span>
           <h3>Build datasets</h3>
-          <p>Capture sessions preserve raw videos/images, robot qpos, hand actions, teleop state, timestamps, calibration snapshots, and metadata.</p>
+          <p>Capture sessions preserve raw videos/images, robot joint positions, hand actions, operator input, timestamps, calibration snapshots, and metadata.</p>
         </article>
         <article class="purpose-card accent-amber">
           <span class="purpose-index">03</span>
           <h3>Make data usable</h3>
-          <p>Processing jobs sync streams, undistort images, render overlays, extract masks, reconstruct objects, and upload derived outputs to NAS.</p>
+          <p>Processing jobs sync streams, remove lens distortion, render overlays, extract masks, reconstruct objects, and upload derived outputs to shared storage.</p>
         </article>
         <article class="purpose-card accent-teal">
           <span class="purpose-index">04</span>
           <h3>Close the loop</h3>
-          <p>Calibration, 6D pose, grasp transforms, IK, Viser/Open3D previews, and robot overlays turn perception results into executable checks.</p>
+          <p>Calibration, object pose, grasp transforms, motion feasibility checks, 3D previews, and robot overlays turn perception results into execution-ready evidence.</p>
         </article>
       </div>
 
       <div class="io-strip" aria-label="Paradex input output summary">
         <div>
           <dt>Inputs</dt>
-          <dd>camera frames, robot state, hand state, teleop streams, calibration boards, object scans</dd>
+          <dd>camera images, robot joint state, hand state, operator input, calibration boards, object scans</dd>
         </div>
         <div>
           <dt>Core work</dt>
-          <dd>synchronize, calibrate, undistort, reconstruct, segment, estimate pose, transform grasps</dd>
+          <dd>line up timestamps, calibrate cameras, remove lens distortion, reconstruct objects, segment objects, estimate pose, convert grasps</dd>
         </div>
         <div>
           <dt>Outputs</dt>
-          <dd>raw/processed datasets, C2R, overlays, masks, COLMAP models, pose/grasp validation artifacts</dd>
+          <dd>raw/processed datasets, camera-to-robot transforms, visual overlays, masks, 3D models, pose/grasp validation files</dd>
         </div>
+      </div>
+    </section>
+
+    <section id="terms" class="section section-tint" aria-labelledby="terms-title">
+      <div class="section-head">
+        <p class="eyebrow">Plain-language terms</p>
+        <h2 id="terms-title">What the core Paradex words mean</h2>
+        <p>
+          The codebase uses robotics and computer-vision shorthand. These definitions
+          keep the site readable without requiring prior knowledge of the lab setup.
+        </p>
+      </div>
+
+      <div class="term-grid">
+        <article class="term-card">
+          <h3>Robot setup</h3>
+          <p>The full physical experiment area: robot arm, hand, cameras, mounts, table, calibration board, lights, capture PCs, and shared storage.</p>
+        </article>
+        <article class="term-card">
+          <h3>Capture PC</h3>
+          <p>A computer attached to one or more cameras. It runs camera services locally so the main PC can start, stop, and monitor recording remotely.</p>
+        </article>
+        <article class="term-card">
+          <h3>Synchronized capture</h3>
+          <p>Recording camera frames, robot joint state, hand state, and operator input with timestamps so later processing can compare the same moment across devices.</p>
+        </article>
+        <article class="term-card">
+          <h3>Dataset</h3>
+          <p>A saved experiment session plus metadata: raw images or videos, robot states, timestamps, calibration files, object labels, and processed outputs.</p>
+        </article>
+        <article class="term-card">
+          <h3>Calibration</h3>
+          <p>Measuring how cameras see the world and where they are relative to the robot. This lets a pixel observation become a robot-frame position.</p>
+        </article>
+        <article class="term-card">
+          <h3>Camera-to-robot transform</h3>
+          <p>Usually written as <code>C2R</code>. It is the coordinate conversion that says where a camera observation sits in the robot's coordinate system.</p>
+        </article>
+        <article class="term-card">
+          <h3>6D object pose</h3>
+          <p>The object's 3D position plus its 3D rotation. A robot needs both to understand where the object is and how it is oriented.</p>
+        </article>
+        <article class="term-card">
+          <h3>Grasp transform</h3>
+          <p>A proposed hand pose converted into the robot frame, so the robot can check whether the hand can reach and approach the object correctly.</p>
+        </article>
+        <article class="term-card">
+          <h3>IK</h3>
+          <p>Inverse kinematics. Given a desired hand or tool pose, IK checks which robot joint angles could reach that pose.</p>
+        </article>
+        <article class="term-card">
+          <h3>NAS</h3>
+          <p>Shared network storage used as the common place for raw recordings, cached inputs, processed results, and files exchanged between machines.</p>
+        </article>
       </div>
     </section>
 
@@ -184,10 +240,11 @@
     <section id="system" class="section section-tint" aria-labelledby="system-title">
       <div class="section-head">
         <p class="eyebrow">System path</p>
-        <h2 id="system-title">Artifacts flow from rig state to robot action</h2>
+        <h2 id="system-title">Artifacts flow from robot setup state to robot action</h2>
         <p>
-          Each stage publishes a concrete file, runtime state, or API contract consumed by
-          the next stage. When a contract changes, re-run the dependent stages.
+          Each stage publishes a concrete file, runtime state, or API contract that the
+          next stage depends on. If camera placement, robot geometry, or file layout
+          changes, the dependent stages should be regenerated.
         </p>
       </div>
 
@@ -198,9 +255,9 @@
           <div role="columnheader">Contract</div>
         </div>
         <div class="flow-row" role="row">
-          <div role="cell">Calibrate rig</div>
+          <div role="cell">Calibrate robot setup</div>
           <div role="cell">Main PC solvers and robot controllers</div>
-          <div role="cell"><code>intrinsics.json</code>, <code>extrinsics.json</code>, <code>C2R.npy</code>, patched xArm URDFs</div>
+          <div role="cell"><code>intrinsics.json</code>, <code>extrinsics.json</code>, <code>C2R.npy</code> camera-to-robot transform, patched xArm URDFs</div>
         </div>
         <div class="flow-row" role="row">
           <div role="cell">Acquire camera data</div>
@@ -220,7 +277,7 @@
         <div class="flow-row" role="row">
           <div role="cell">Estimate and execute</div>
           <div role="cell"><code>object6d</code>, grasp modules, robot GUI/controller</div>
-          <div role="cell">Object pose, robot-frame grasp, IK result, overlay/Viser validation</div>
+          <div role="cell">Object pose, robot-frame grasp, IK motion result, overlay/Viser validation</div>
         </div>
       </div>
     </section>
@@ -241,7 +298,7 @@
           <ul>
             <li>Owns orchestration scripts and generated result inspection.</li>
             <li>Drives <code>remote_camera_controller</code>, <code>run_distributed</code>, calibration solvers, and inference.</li>
-            <li>Reads/writes NAS roots through <code>shared_dir</code> and local cache through <code>download_dir</code>.</li>
+            <li>Reads/writes NAS shared-storage roots through <code>shared_dir</code> and local cache through <code>download_dir</code>.</li>
           </ul>
         </article>
         <article class="system-card accent-teal">
@@ -257,7 +314,7 @@
           <ul>
             <li>Dataset scripts coordinate XArm, Allegro, Inspire, XSens, Oculus, and camera capture.</li>
             <li><code>CaptureSession</code> writes camera, arm, hand, teleop, timestamp, and state streams together.</li>
-            <li>Robot execution depends on current C2R and xArm kinematic calibration.</li>
+            <li>Robot execution depends on the current <code>C2R</code> camera-to-robot transform and xArm kinematic calibration.</li>
           </ul>
         </article>
         <article class="system-card accent-amber">
@@ -284,7 +341,7 @@
       <div class="mode-grid">
         <article class="mode-card">
           <h3>Distributed still images</h3>
-          <p>Single-frame PySpin stills across the rig. Use for calibration and object-pose capture.</p>
+          <p>Single-frame PySpin stills across the robot setup. Use for calibration and object-pose capture.</p>
           <pre><code>python src/camera/server_daemon.py
 
 python src/capture/camera/image_remote.py \
@@ -450,7 +507,7 @@ python src/util/upload_video/main.py</code></pre>
           <h3>Geometry health</h3>
           <ul>
             <li>Refresh downstream calibration when camera placement or robot geometry changes.</li>
-            <li>Validate <code>C2R.npy</code> with robot overlays before execution.</li>
+            <li>Validate <code>C2R.npy</code> camera-to-robot alignment with robot overlays before execution.</li>
             <li>Use <code>ImageDict</code> and projection helpers for repeatable checks.</li>
           </ul>
         </article>
@@ -459,7 +516,7 @@ python src/util/upload_video/main.py</code></pre>
           <ul>
             <li>Define explicit <code>Job.done</code> checks when output presence is not enough.</li>
             <li>Use framework progress for long frame-level work.</li>
-            <li>Keep NAS-relative paths in jobs and local-only paths inside transforms.</li>
+            <li>Keep NAS shared-storage paths in jobs and local-only paths inside transforms.</li>
           </ul>
         </article>
       </div>
