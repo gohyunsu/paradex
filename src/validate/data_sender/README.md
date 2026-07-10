@@ -8,7 +8,7 @@ No command channel (unlike [`../command_sender/`](../command_sender)).
 | File | Purpose |
 |------|---------|
 | `main.py` | **Main PC.** SSH-launches `client.py` on capture PCs, starts a `DataCollector`, prints collected data per PC once a second. |
-| `client.py` | **Capture PC** (launched by `main.py`). A `DataPublisher(name="TestPublisher")` that sends an increasing `value` every 0.5 s forever. |
+| `client.py` | **Capture PC** (launched by `main.py`). A `DataPublisher(name=<capture pc name>)` that sends an increasing `value` every 0.5 s forever. |
 
 ## Usage
 Run only the main-PC script; it launches the client over SSH.
