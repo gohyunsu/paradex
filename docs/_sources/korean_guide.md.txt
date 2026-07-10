@@ -216,24 +216,33 @@ python src/validate/robot/inspire_left_overlay.py
 
 ## 7. Franka로 돌릴 때
 
-현재 main line은 Franka FR3를 end-to-end로 바로 움직이는 상태는 아니다.
-이미 있는 것은 URDF, visualizer, 일부 config entry, frame 정의다. 실제 제어를
-하려면 `origin/vlm_dex` 쪽 Franka controller 관련 코드 중 필요한 부분만
-선별 porting해야 한다.
+이 fork에는 `origin/vlm_dex`의 Franka 관련 코드 중 필요한 부분이 포팅되어 있다.
+즉, 코드상으로는 `get_arm("franka")`, Franka teaching/replay utility,
+`capture.py --arm franka`, `calculate.py --arm franka` 경로가 있다. 다만 실제
+FR3 구동은 ROS 2 / `franka_ros2` stack과 안전 확인이 필요하므로 정적 테스트만으로
+완료된 것으로 보면 안 된다.
 
 현재 있는 것:
 
 - `rsc/robot/franka.urdf`
 - `src/validate/visualizer/franka.py`
+- `paradex/io/robot_controller/franka_controller.py`
+- `get_arm("franka")` factory support
+- `src/capture/robot/franka_home.py`
+- `src/capture/robot/franka_teaching.py`
+- `src/capture/robot/franka_replay_check.py`
+- `src/validate/robot/franka_state.py`
+- hand-eye capture/solve의 `fr3_link8` end-effector link 지원
 - `system/*/network.json` 일부의 `franka` entry
 - `paradex/transforms/coordinate.py`의 Franka frame 정의
 
-아직 필요한 것:
+아직 실제 장비에서 확인해야 할 것:
 
-- `paradex/io/robot_controller/franka_controller.py`
-- `get_arm("franka")` factory support
-- hand-eye capture/solve에서 `fr3_link8` end-effector link 지원
 - ROS 2 / `franka_ros2` 기반 controller smoke test
+- `python src/validate/robot/franka_state.py`로 qpos/TF readback 확인
+- `franka_home.py` 또는 `franka_replay_check.py --step --home`의 supervised motion
+- `capture.py --arm franka`로 실제 hand-eye capture
+- `calculate.py --arm franka` 결과 overlay 품질
 
 자세한 내용은 {doc}`Franka FR3 Setup Notes <franka_setup>`를 본다.
 

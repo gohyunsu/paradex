@@ -316,19 +316,19 @@ python src/validate/robot/inspire_left_overlay.py</code></pre>
             <section id="franka">
               <h2>7. Franka로 돌릴 때</h2>
               <p>
-                현재 main line은 Franka FR3를 end-to-end로 바로 움직이는 상태는 아니다.
-                이미 있는 것은 URDF, visualizer, 일부 config entry, frame 정의다. 실제 제어를
-                하려면 <code>origin/vlm_dex</code> 쪽 Franka controller 관련 코드 중 필요한 부분만
-                선별 porting해야 한다.
+                이 fork에는 <code>origin/vlm_dex</code>의 Franka 관련 코드 중 필요한 부분이 포팅되어 있다.
+                코드상으로는 <code>get_arm("franka")</code>, Franka teaching/replay utility,
+                <code>capture.py --arm franka</code>, <code>calculate.py --arm franka</code> 경로가 있다.
+                다만 실제 FR3 구동은 ROS 2 / <code>franka_ros2</code> stack과 안전 확인이 필요하다.
               </p>
               <table class="docutils align-default">
                 <thead>
-                  <tr><th class="head">현재 있는 것</th><th class="head">아직 필요한 것</th></tr>
+                  <tr><th class="head">현재 있는 것</th><th class="head">실제 장비에서 확인할 것</th></tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td><code>rsc/robot/franka.urdf</code>, <code>src/validate/visualizer/franka.py</code>, 일부 <code>network.json</code> entry, frame 정의</td>
-                    <td><code>franka_controller.py</code>, <code>get_arm("franka")</code>, <code>fr3_link8</code> hand-eye 지원, ROS 2 controller smoke test</td>
+                    <td><code>franka_controller.py</code>, <code>get_arm("franka")</code>, <code>franka_state.py</code>, <code>franka_teaching.py</code>, <code>franka_replay_check.py</code>, <code>fr3_link8</code> hand-eye 지원</td>
+                    <td>ROS 2 controller smoke test, qpos/TF readback, supervised motion, 실제 hand-eye capture, overlay 품질</td>
                   </tr>
                 </tbody>
               </table>

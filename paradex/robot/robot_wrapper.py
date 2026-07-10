@@ -1,14 +1,50 @@
 from typing import List, Tuple
 
+import importlib
+import os
+import site
+import sys
+
 import numpy as np
 import numpy.typing as npt
-import pinocchio as pin
 # Used :
 # https://github.com/dexsuite/dex-retargeting/blob/main/dex_retargeting/robot_wrapper.py
 
 # Makes it easier to use robot kinematics and dynamics without worrying about Pinocchio's details.
 
 # Follow https://stack-of-tasks.github.io/pinocchio/download.html for pinocchio installation
+
+
+def _import_pinocchio():
+    pin = importlib.import_module("pinocchio")
+    if hasattr(pin, "buildModelFromUrdf"):
+        return pin
+
+    version = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    candidate_roots = []
+    try:
+        candidate_roots.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+    candidate_roots.append(site.getusersitepackages())
+
+    for root in candidate_roots:
+        cmeel_path = os.path.join(root, "cmeel.prefix", "lib", version, "site-packages")
+        if not os.path.isdir(os.path.join(cmeel_path, "pinocchio")):
+            continue
+        sys.modules.pop("pinocchio", None)
+        sys.path.insert(0, cmeel_path)
+        pin = importlib.import_module("pinocchio")
+        if hasattr(pin, "buildModelFromUrdf"):
+            return pin
+
+    raise ImportError(
+        "Pinocchio robotics bindings are not available. The PyPI 'pinocchio' "
+        "package may be shadowing the robotics 'pin' package."
+    )
+
+
+pin = _import_pinocchio()
 
 
 class RobotWrapper:
@@ -209,4 +245,3 @@ class RobotWrapper:
         if len(root_links) != 1:
             raise RuntimeError(f"Ambiguous or missing root link(s): {root_links}")
         return root_links[0]
-    

@@ -448,7 +448,7 @@ loop thread and exposes the same lifecycle verbs — <code class="docutils liter
 </thead>
 <tbody>
 <tr class="row-even"><td><p><strong>Arm</strong></p></td>
-<td><p>6-DoF manipulator. <strong>XArm</strong> (UFactory SDK over TCP) is live; <strong>Franka</strong> is stubbed in the factory.</p></td>
+<td><p>Manipulator. <strong>XArm</strong> (UFactory SDK over TCP) and <strong>Franka FR3</strong> (ROS 2 <code class="docutils literal notranslate"><span class="pre">fr3_arm_controller</span></code>) are available through the factory.</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>Hand</strong></p></td>
 <td><p>Multi-finger end-effector. <strong>Allegro</strong> (16 DoF, ROS2) or <strong>Inspire</strong> (6 DoF, Modbus TCP or USB).</p></td>
@@ -903,8 +903,9 @@ overspeed vs. singularity vs. collision) on the next run, instead of guessing.</
 params straight from <code class="docutils literal notranslate"><span class="pre">system/current/network.json</span></code>; a missing key raises at
 construction. <code class="docutils literal notranslate"><span class="pre">get_hand(&quot;inspire&quot;,</span> <span class="pre">ip=True)</span></code> uses <code class="docutils literal notranslate"><span class="pre">network_info[&quot;inspire&quot;]</span></code>
 (<code class="docutils literal notranslate"><span class="pre">ip</span></code>+<code class="docutils literal notranslate"><span class="pre">port</span></code>); <code class="docutils literal notranslate"><span class="pre">ip=False</span></code> uses <code class="docutils literal notranslate"><span class="pre">network_info[&quot;inspire_usb&quot;][&quot;param&quot;]</span></code>.</p></li>
-<li><p><strong>Franka is stubbed.</strong> The <code class="docutils literal notranslate"><span class="pre">franka</span></code> branch in <code class="docutils literal notranslate"><span class="pre">get_arm</span></code> is commented out — only
-<code class="docutils literal notranslate"><span class="pre">xarm</span></code> currently returns a controller.</p></li>
+<li><p><strong>Franka requires ROS 2 readiness.</strong> <code class="docutils literal notranslate"><span class="pre">get_arm(&quot;franka&quot;)</span></code> returns a
+<code class="docutils literal notranslate"><span class="pre">FrankaController</span></code>, but it needs Humble + <code class="docutils literal notranslate"><span class="pre">~/franka_ros2_ws</span></code> sourced and a live
+<code class="docutils literal notranslate"><span class="pre">fr3_arm_controller</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">action</span></code> units differ per device.</strong> Arm radians / pose vs. Allegro radians vs.
 Inspire 0–1000 motor units. <code class="docutils literal notranslate"><span class="pre">parse_inspire</span></code> converts motor units to URDF joint
 radians (and fills mimic joints) when driving a <code class="docutils literal notranslate"><span class="pre">RobotWrapper</span></code> from hardware

@@ -17,7 +17,7 @@ controller, spreading connection params from `network_info`
 
 | Function | Input | Output | Description |
 |----------|-------|--------|-------------|
-| `get_arm(arm_name)` | `arm_name: str` | `XArmController` \| `None` | `"xarm"` → `XArmController(ip=...)`. `franka` branch is commented out; other names return `None`. |
+| `get_arm(arm_name)` | `arm_name: str` | arm controller \| `None` | `"xarm"` → `XArmController(ip=...)`; `"franka"` → ROS 2 `FrankaController`; other names return `None`. |
 | `get_hand(hand_name, tactile=False, ip=True)` | `hand_name: str`, `tactile: bool`, `ip: bool` | hand controller | `"inspire"`/`"inspire_left"` → `InspireControllerIP` (`ip=True`) or `InspireController` USB (`ip=False`); `"allegro"` → `AllegroController`. |
 :::
 

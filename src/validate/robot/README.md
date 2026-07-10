@@ -1,6 +1,7 @@
 # Robot Hardware Validation
 
-Smoke-test scripts that exercise the physical robot hands (Allegro, Inspire) and the XArm arm, plus a tactile/force viewer and a URDF-overlay debug tool.
+Smoke-test scripts that exercise the physical robot hands (Allegro, Inspire), XArm,
+and Franka FR3 paths, plus tactile/force viewers and URDF-overlay debug tools.
 
 ## Scripts
 | File | Purpose |
@@ -11,6 +12,7 @@ Smoke-test scripts that exercise the physical robot hands (Allegro, Inspire) and
 | `inspire_left_gui.py` | Interactive matplotlib GUI for the Inspire LEFT hand: 6 DOF sliders, force bar plot, tactile heatmap grid, HOME/OPEN/CLOSED presets, and a force-calibration button. |
 | `inspire_left_overlay.py` | URDF-tuning debug tool: captures a multi-camera snapshot + arm/hand qpos, then renders the inspire-left URDF mesh alpha-overlaid on the images with OpenCV trackbars for the 4 thumb joints and wrist xyz offset. |
 | `xarm_base_wiggle.py` | Smoothly wiggles XArm joint1 ±60° (sine) about the current pose while holding all other joints, to validate base-joint servo motion. |
+| `franka_state.py` | Non-motion FR3 smoke test: constructs `FrankaController` and reads `/joint_states` plus TF `fr3_link0 -> fr3_link8`. |
 
 ## Usage
 Each script is run directly. Hardware required is noted per script.
@@ -31,6 +33,9 @@ python src/validate/robot/inspire_left_gui.py
 # XArm base joint wiggle (XArm SDK)
 python src/validate/robot/xarm_base_wiggle.py
 
+# Franka FR3 state readback (ROS2/franka_ros2, no motion)
+python src/validate/robot/franka_state.py
+
 # Inspire LEFT URDF overlay (multi-camera capture + XArm + Inspire LEFT)
 python src/validate/robot/inspire_left_overlay.py                 # fresh capture
 python src/validate/robot/inspire_left_overlay.py --load <abs_dir>  # reuse a snapshot
@@ -41,6 +46,8 @@ python src/validate/robot/inspire_left_overlay.py --load <abs_dir>  # reuse a sn
 - `inspire.py` — Inspire hand via USB Modbus (`InspireController`, `network_info['inspire_usb']`).
 - `inspire_left.py`, `inspire_left_gui.py` — Inspire LEFT hand via Modbus TCP/IP socket (`InspireControllerIP`, `network_info['inspire']`).
 - `xarm_base_wiggle.py` — XArm arm via SDK (`get_arm("xarm")`).
+- `franka_state.py` — Franka FR3 via ROS2 (`FrankaController`); requires Humble +
+  `~/franka_ros2_ws`, live `/controller_manager`, `/joint_states`, and TF.
 - `inspire_left_overlay.py` — multi-camera rig (remote capture) **+** XArm **+** Inspire LEFT; requires current camera calibration and hand-eye (`C2R`).
 
 ### GUI / keyboard controls
@@ -53,6 +60,8 @@ python src/validate/robot/inspire_left_overlay.py --load <abs_dir>  # reuse a sn
 - `inspire_left.py` — hand reaches each pose; printed `actual` angles track the `target` commands within tolerance.
 - `inspire_left_gui.py` — slider moves track on the hand; force bars and tactile heatmaps respond to contact; viz loop runs at roughly 20 Hz.
 - `xarm_base_wiggle.py` — base joint oscillates smoothly with no drift on other joints; returns to home on exit.
+- `franka_state.py` — prints 7-DoF qpos and a 4x4 `fr3_link0 -> fr3_link8` pose,
+  then `PASS`.
 - `inspire_left_overlay.py` — rendered hand mesh should align with the real hand in the images; used to tune thumb joints and wrist mount offset.
 
 ## Related

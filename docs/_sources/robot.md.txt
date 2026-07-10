@@ -60,7 +60,7 @@ Method-level details for each component are in the {doc}`API reference <robot_ap
 
 | Term | Meaning |
 |------|---------|
-| **Arm** | 6-DoF manipulator. **XArm** (UFactory SDK over TCP) is live; **Franka** is stubbed in the factory. |
+| **Arm** | Manipulator. **XArm** (UFactory SDK over TCP) and **Franka FR3** (ROS 2 `fr3_arm_controller`) are available through the factory. |
 | **Hand** | Multi-finger end-effector. **Allegro** (16 DoF, ROS2) or **Inspire** (6 DoF, Modbus TCP or USB). |
 | **Controller** | A class wrapping one device: a background loop thread + thread-safe `move`/`get_data`. |
 | **Action** | The command written to a device. Arm: `(6,)` joint radians *or* `(4,4)` homogeneous pose. Allegro: `(16,)` radians. Inspire: `(6,)` motor units 0–1000. |
@@ -364,8 +364,9 @@ overspeed vs. singularity vs. collision) on the next run, instead of guessing.
   params straight from `system/current/network.json`; a missing key raises at
   construction. `get_hand("inspire", ip=True)` uses `network_info["inspire"]`
   (`ip`+`port`); `ip=False` uses `network_info["inspire_usb"]["param"]`.
-- **Franka is stubbed.** The `franka` branch in `get_arm` is commented out — only
-  `xarm` currently returns a controller.
+- **Franka requires ROS 2 readiness.** `get_arm("franka")` returns a
+  `FrankaController`, but it needs Humble + `~/franka_ros2_ws` sourced and a live
+  `fr3_arm_controller`.
 - **`action` units differ per device.** Arm radians / pose vs. Allegro radians vs.
   Inspire 0–1000 motor units. `parse_inspire` converts motor units to URDF joint
   radians (and fills mimic joints) when driving a `RobotWrapper` from hardware

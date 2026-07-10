@@ -36,6 +36,8 @@ Rule of thumb: **calling** these controllers → `usage.md`; **editing** them �
 | `deprecated/`, `under_test/` | Old GUI variants and WIP tactile/CLI experiments. **Not** imported by the factories — treat as scratch. |
 
 All paths relative to [`paradex/io/robot_controller/`](../../paradex/io/robot_controller/).
-Franka (mentioned in the top-level `CLAUDE.md`) is **not implemented** — its branch is commented out
-in `get_arm`. Related: `CaptureSession` ([`agent_docs/dataset_acquisition/`](../dataset_acquisition/README.md))
-is the primary consumer; the camera half is [`agent_docs/camera_system/`](../camera_system/README.md).
+Franka FR3 is implemented through a ROS 2 `FrankaController` ported from `origin/vlm_dex`.
+It requires a sourced `franka_ros2` stack and a live `fr3_arm_controller`; static imports do not
+prove hardware readiness. Related: `CaptureSession`
+([`agent_docs/dataset_acquisition/`](../dataset_acquisition/README.md)) is the primary consumer;
+the camera half is [`agent_docs/camera_system/`](../camera_system/README.md).

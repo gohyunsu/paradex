@@ -1,9 +1,14 @@
 import os
+import sys
 import cv2
 import argparse
 import numpy as np
 import tqdm
 from copy import deepcopy
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
 from paradex.utils.file_io import find_latest_directory
 
@@ -16,10 +21,17 @@ from paradex.image.aruco import merge_charuco_detection, find_common_indices, de
 from paradex.transforms.conversion import SOLVE_XA_B
 from paradex.visualization.robot import RobotModule
 
+EEF_LINK = {"xarm": "link6", "franka": "fr3_link8"}
+
+
+def _sorted_indices(path):
+    return sorted(os.listdir(path), key=lambda s: int(s) if s.isdigit() else s)
+
+
 def undistort_and_detect_charuco(name):
     img_dict = None
     root_dir = os.path.join(handeye_calib_path, name)
-    index_list = sorted(os.listdir(root_dir))
+    index_list = _sorted_indices(root_dir)
     
     for index in tqdm.tqdm(index_list, desc="Undistort and detect charuco"):
         print(f"Processing index {index}...")
@@ -61,16 +73,19 @@ def undistort_and_detect_charuco(name):
 
 def compute_fk(name, arm):
     root_dir = os.path.join(handeye_calib_path, name)
-    index_list = sorted(os.listdir(root_dir))
+    index_list = _sorted_indices(root_dir)
+    if arm not in EEF_LINK:
+        raise NotImplementedError(f"EEF link for arm '{arm}' is not defined.")
 
     robot_wrapper = RobotWrapper(get_robot_urdf_path(arm_name=arm))
+    link = EEF_LINK[arm]
 
     for index in index_list:
         if os.path.exists(os.path.join(root_dir, index, "eef_fk.npy")):
             continue
         
         qpos = np.load(os.path.join(root_dir, index, "qpos.npy"))
-        eef = robot_wrapper.compute_forward_kinematics(qpos, link_list=["link6"])['link6']
+        eef = robot_wrapper.compute_forward_kinematics(qpos, link_list=[link])[link]
         np.save(os.path.join(root_dir, index, "eef_fk.npy"), eef)
 
 def _floor_board_id_range(floor_board_key="3"):
@@ -98,8 +113,7 @@ def compute_motion(name):
     motion_wrt_robot = []
 
     root_dir = os.path.join(handeye_calib_path, name)
-    index_list = os.listdir(root_dir)
-    index_list.sort()
+    index_list = _sorted_indices(root_dir)
 
     eef_list = [np.load(os.path.join(root_dir, index, "eef_fk.npy")) for index in index_list]
 
@@ -135,8 +149,7 @@ def compute_motion(name):
 def debug(name, arm):
     root_dir = os.path.join(handeye_calib_path, name)
 
-    index_list = os.listdir(root_dir)
-    index_list.sort()
+    index_list = _sorted_indices(root_dir)
 
     robot_wrt_cam = np.load(os.path.join(root_dir, index_list[0], "C2R.npy")) # cam_wrt_robot
     marker_pos = {}
@@ -223,7 +236,7 @@ if args.name is None:
 
 name = args.name
 root_path = os.path.join(handeye_calib_path, name)
-index_list = os.listdir(root_path)
+index_list = _sorted_indices(root_path)
 intrinsic, extrinsic = load_camparam(os.path.join(root_path, "0"))
 
 undistort_and_detect_charuco(name)

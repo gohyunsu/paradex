@@ -1,6 +1,8 @@
 # Hand-Eye Calibration
 
-Computes the camera-to-robot transform (C2R) for an xArm. The arm is driven through a fixed trajectory while observing a Charuco board; per-pose forward kinematics and triangulated board poses feed a Tsai-Lenz AX=XB solver.
+Computes the camera-to-robot transform (C2R) for xArm or Franka FR3. The arm is
+driven through a fixed trajectory while observing a Charuco board; per-pose forward
+kinematics and triangulated board poses feed a Tsai-Lenz AX=XB solver.
 
 ## Scripts
 | File | Purpose |
@@ -14,11 +16,13 @@ Prerequisites: valid intrinsic **and** extrinsic calibration must exist (extrins
 1. On the **Main PC**, capture (drives the live xArm):
    ```bash
    python src/calibration/handeye/capture.py --arm xarm
+   python src/calibration/handeye/capture.py --arm franka
    ```
    No keyboard interaction — it auto-steps through every `*_qpos` trajectory file, moving the arm and capturing at each waypoint.
 2. On the **Main PC**, solve:
    ```bash
    python src/calibration/handeye/calculate.py --arm xarm            # latest handeye dir
+   PYTHONPATH= python src/calibration/handeye/calculate.py --arm franka
    python src/calibration/handeye/calculate.py --name 20250101_120000 --arm xarm
    ```
    Prints FK errors and AX=XB residuals (mm), writes `C2R.npy`, and saves per-pose debug images.
@@ -27,6 +31,7 @@ Prerequisites: valid intrinsic **and** extrinsic calibration must exist (extrins
 - Capture writes `~/shared_data/handeye_calibration/<timestamp>/<idx>/`: `images/`, `robot.npy`, `eef.npy` (eef pose), `qpos.npy`; camera params saved to `<timestamp>/0/`.
 - Trajectory read from `get_handeye_calib_traj(arm)` — files named `<n>_qpos*`.
 - `calculate.py` adds per-pose `undistort/`, `detection/`, `debug/`, `charuco_3d_{ids,corners}.npy`, `eef_fk.npy`, and writes `C2R.npy` (robot_wrt_cam) into the first index dir.
+- FK links: `xarm -> link6`, `franka -> fr3_link8`.
 - Result consumed elsewhere via `paradex.calibration.utils.load_current_C2R()`.
 
 ## Related

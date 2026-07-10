@@ -100,7 +100,9 @@ overspeed vs. singularity vs. collision) instead of guessing.
 - **Feed servo small steps.** No interpolation; large single jumps fault the arm.
 - **`±2π` joint clamp is cosmetic.** Real XArm6 limits are tighter (J2/J3/J5); a
   target inside `±2π` but outside the real range is rejected by the arm itself.
-- **Franka is stubbed** — only `xarm` returns an arm today.
+- **Franka needs ROS 2 readiness.** `get_arm("franka")` returns a ROS 2
+  `FrankaController`, but only after Humble and `~/franka_ros2_ws` are sourced and
+  `fr3_arm_controller` is active.
 - **Units differ per device** — arm radians/pose vs. Allegro radians vs. Inspire
   0–1000. Don't cross them.
 - **Validate scripts** live in `src/validate/robot/` — run those to smoke-test a

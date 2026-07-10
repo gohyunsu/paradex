@@ -7,40 +7,35 @@ fork and the recommended path to run the Paradex pipeline with a Franka FR3 arm.
 
 ## Current Status
 
-The current `main` line does not yet run a real Franka arm end to end.
+This fork now includes the Franka-specific controller and hand-eye entry points
+ported from `origin/vlm_dex`. The code path is present, but real hardware motion
+still requires a sourced ROS 2 / `franka_ros2` stack and supervised robot checks.
 
 What is already present:
 
 - `rsc/robot/franka.urdf`: FR3 arm URDF for FK, visualization, and planning-side work.
 - `src/validate/visualizer/franka.py`: URDF/Viser smoke test. This does not move hardware.
+- `paradex/io/robot_controller/franka_controller.py`: ROS 2 controller wrapper for
+  `/fr3_arm_controller/follow_joint_trajectory`.
+- `get_arm("franka")`: returns `FrankaController`.
+- `src/capture/robot/franka_home.py`, `franka_teaching.py`, and
+  `franka_replay_check.py`: home, teaching, and motion dry-run utilities.
+- `src/calibration/handeye/capture.py --arm franka`: replays taught poses and captures
+  camera images plus `qpos.npy` / `eef.npy`.
+- `src/calibration/handeye/calculate.py --arm franka`: uses `fr3_link8` for FK.
 - `system/paradex2/network.json` and `system/robothome/network.json`: existing `franka`
   IP entries.
 - `paradex/transforms/coordinate.py`: `franka` frame entries.
 - `paradex/retargetor/unimanual.py`: accepts `arm_name="franka"` at the retargeting API
   boundary.
 
-What is missing on current `main`:
+What is still not validated by static tests:
 
-- `paradex/io/robot_controller/franka_controller.py`.
-- `get_arm("franka")` factory support. The branch is currently commented out.
-- `src/calibration/handeye/capture.py --arm franka`.
-- Franka FK link selection in `src/calibration/handeye/calculate.py`
-  (`xarm` uses `link6`; FR3 should use `fr3_link8`).
+- ROS 2 stack availability on the target main PC.
+- `FrankaController` construction against a live `/controller_manager`.
+- Actual home/replay/capture motion with the FR3 workspace cleared.
 - A checked-in `system/current/` runtime config. The loader reads
   `system/current/network.json` and `system/current/pc.json` at import time.
-
-There is relevant Franka work on `origin/vlm_dex`, including:
-
-- `paradex/io/robot_controller/franka_controller.py`
-- `src/capture/robot/franka_teaching.py`
-- `src/capture/robot/franka_replay_check.py`
-- `src/capture/robot/franka_home.py`
-- `docs/franka_handeye.md`
-- `rsc/robot/fr3_inspire/`
-
-Do not merge the full `origin/vlm_dex` branch into current `main` without review.
-It diverges broadly from the current camera/process/site structure. Port only the
-Franka-specific pieces.
 
 ## Recommended Architecture
 
@@ -107,7 +102,19 @@ Sanity checks:
 ros2 control list_controllers -c /controller_manager
 ros2 topic echo --once /joint_states
 ros2 run tf2_ros tf2_echo fr3_link0 fr3_link8
+python src/validate/robot/franka_state.py
 ```
+
+If the conda env shadows the system `libstdc++`, ROS imports can fail with a
+`GLIBCXX_3.4.30` error. On this host, the working pattern for base ROS imports is:
+
+```bash
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 python src/validate/robot/franka_state.py
+```
+
+`franka_teaching.py` also requires `franka_msgs`, which should come from the
+`franka_ros2` workspace. If `~/franka_ros2_ws/install/setup.bash` is missing,
+install/build/source that workspace before teaching.
 
 ## Paradex Config
 
@@ -121,8 +128,8 @@ system/current/camera.json
 system/current/charuco_info.json
 ```
 
-For Franka, the current main config format should be normalized before controller
-factory support is enabled. Prefer the xArm-style structure:
+For Franka, prefer the xArm-style structure even though the current
+`FrankaController` talks through ROS 2 and does not read `robot_ip` directly:
 
 ```json
 {
@@ -135,70 +142,49 @@ factory support is enabled. Prefer the xArm-style structure:
 }
 ```
 
-If the controller uses ROS 2 only and does not need `robot_ip` directly, keep the
-entry anyway so scripts can identify the arm consistently.
-
-## Porting Plan
-
-Recommended minimal port from `origin/vlm_dex`:
-
-1. Add `paradex/io/robot_controller/franka_controller.py`.
-2. Enable `get_arm("franka")` in `paradex/io/robot_controller/__init__.py`.
-3. Add the Franka utility scripts:
-   - `src/capture/robot/franka_home.py`
-   - `src/capture/robot/franka_teaching.py`
-   - `src/capture/robot/franka_replay_check.py`
-4. Update hand-eye capture:
-   - `src/calibration/handeye/capture.py --arm franka`
-   - instantiate `FrankaController`
-   - record `eef.npy` as `fr3_link0 -> fr3_link8`
-5. Update hand-eye solve:
-   - use `EEF_LINK = {"xarm": "link6", "franka": "fr3_link8"}`
-   - compute FK from `rsc/robot/franka.urdf`
-6. Add validation scripts before running full capture:
-   - controller construction
-   - current qpos/state readback
-   - home move
-   - replay of taught poses without cameras
-7. Only after those pass, run `src/calibration/handeye/capture.py --arm franka`.
+Keep the entry anyway so scripts can identify the arm consistently.
 
 ## Pipeline Order
 
-After porting, the Franka path should be:
+The Franka path is:
 
 1. Start camera daemons on capture PCs.
 2. Start the Franka ROS 2 stack on the main PC.
-3. Teach hand-eye poses:
+3. Run a non-motion state readback:
+
+```bash
+python src/validate/robot/franka_state.py
+```
+
+4. Teach hand-eye poses:
 
 ```bash
 python src/capture/robot/franka_teaching.py
 ```
 
-4. Replay motion without cameras:
+5. Replay motion without cameras:
 
 ```bash
 python src/capture/robot/franka_replay_check.py --step --home
 ```
 
-5. Capture multi-camera hand-eye data:
+6. Capture multi-camera hand-eye data:
 
 ```bash
 python src/calibration/handeye/capture.py --arm franka
 ```
 
-6. Solve without ROS in `PYTHONPATH` if ROS Pinocchio conflicts with the conda
+7. Solve without ROS in `PYTHONPATH` if ROS Pinocchio conflicts with the conda
    Pinocchio/Numpy stack:
 
 ```bash
 PYTHONPATH= python src/calibration/handeye/calculate.py --arm franka
 ```
 
-7. Validate C2R with robot overlays before collecting task data.
+8. Validate C2R with robot overlays before collecting task data.
 
 ## Known Risks
 
-- Full `origin/vlm_dex` merge is high risk because it changes many unrelated
-  files and predates the current `paradex.process` and camera transport cleanup.
 - `DEVICE2WRIST["franka"]` is currently documented as non-orthonormal. Fix or
   validate it before relying on retargeted teleop actions.
 - Franka FCI requires stable 1 kHz control timing. If the host is not using a
@@ -207,3 +193,6 @@ PYTHONPATH= python src/calibration/handeye/calculate.py --arm franka
   libfranka.
 - Gravity compensation depends on the Desk end-effector load. A stale load can
   make the arm drift or jump when teaching mode starts.
+- Mixed conda/ROS environments can load an old conda `libstdc++`. Use the
+  `LD_PRELOAD` workaround above or fix the env package versions before debugging
+  `rclpy`.
