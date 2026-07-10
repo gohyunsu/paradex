@@ -25,9 +25,10 @@ The **Start stream** button:
 
 The preview is intentionally low resolution: `stream_client.py` downsamples each
 camera image by 8x and publishes per-camera JPEG frames. The browser renders one
-tile per camera instead of a server-side merged image, so all 20 cameras remain
-visible and slow frames do not block the whole view. Use it for framing, liveness,
-frame ID progress, and daemon health. Use capture scripts for saved datasets.
+tile per camera from a single `/api/frame_batch` update loop, avoiding browser
+per-host MJPEG connection limits. All 20 cameras remain visible and slow frames do
+not block the whole view. Use it for framing, liveness, frame ID progress, and
+daemon health. Use capture scripts for saved datasets.
 
 ## What Stop Does
 

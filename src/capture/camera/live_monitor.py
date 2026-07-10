@@ -9,6 +9,7 @@ capture-PC stream clients, arms camera acquisition through
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import sys
 import threading
@@ -445,6 +446,7 @@ HTML = """<!doctype html>
     };
 
     let busy = false;
+    let frameVersion = 0;
     const cameraTiles = new Map();
 
     function ageText(seconds) {
@@ -499,12 +501,26 @@ HTML = """<!doctype html>
       tile.dataset.name = name;
       const img = document.createElement("img");
       img.alt = `${name} live preview`;
-      img.src = `/camera.mjpg?name=${encodeURIComponent(name)}&t=${Date.now()}`;
+      img.decoding = "async";
       const label = document.createElement("div");
       label.className = "camera-label";
       label.textContent = name;
       tile.append(img, label);
       return {tile, img, label};
+    }
+
+    function ensureCameraTile(name) {
+      let parts = cameraTiles.get(name);
+      if (!parts) {
+        parts = makeCameraTile(name);
+        cameraTiles.set(name, parts);
+      }
+      return parts;
+    }
+
+    function updateCameraLabel(parts, name, frame) {
+      const age = frame.receive_age_ms === null ? "-" : `${Math.round(frame.receive_age_ms)} ms`;
+      parts.label.textContent = `${name} · ${frame.pc || "pc?"} · ${age}`;
     }
 
     function syncCameraTiles(frames) {
@@ -518,18 +534,26 @@ HTML = """<!doctype html>
       }
       layoutCameraGrid(entries.length);
       for (const [name, frame] of entries) {
-        let parts = cameraTiles.get(name);
-        if (!parts) {
-          parts = makeCameraTile(name);
-          cameraTiles.set(name, parts);
-        }
+        const parts = ensureCameraTile(name);
         els.cameraGrid.append(parts.tile);
-        const age = frame.receive_age_ms === null ? "-" : `${Math.round(frame.receive_age_ms)} ms`;
-        parts.label.textContent = `${name} · ${frame.pc || "pc?"} · ${age}`;
+        updateCameraLabel(parts, name, frame);
       }
       if (!entries.length) {
         els.cameraGrid.replaceChildren();
         cameraTiles.clear();
+      }
+    }
+
+    function applyFrameBatch(frames) {
+      for (const [name, frame] of sortedFrameEntries(frames)) {
+        const parts = ensureCameraTile(name);
+        if (!parts.tile.isConnected) {
+          els.cameraGrid.append(parts.tile);
+        }
+        if (frame.jpeg) {
+          parts.img.src = `data:image/jpeg;base64,${frame.jpeg}`;
+        }
+        updateCameraLabel(parts, name, frame);
       }
     }
 
@@ -585,6 +609,19 @@ HTML = """<!doctype html>
       }
     }
 
+    async function frameLoop() {
+      while (true) {
+        try {
+          const res = await fetch(`/api/frame_batch?after=${frameVersion}`, {cache: "no-store"});
+          const data = await res.json();
+          frameVersion = data.version ?? frameVersion;
+          applyFrameBatch(data.frames || {});
+        } catch (err) {
+          await new Promise(resolve => setTimeout(resolve, 400));
+        }
+      }
+    }
+
     async function post(path) {
       busy = true;
       await refresh();
@@ -606,6 +643,7 @@ HTML = """<!doctype html>
     els.refresh.addEventListener("click", refresh);
     window.addEventListener("resize", () => layoutCameraGrid(cameraTiles.size));
     refresh();
+    frameLoop();
     setInterval(refresh, 500);
   </script>
 </body>
@@ -652,6 +690,7 @@ class CameraMonitor:
         self.error: str | None = None
         self.camera_jpegs: dict[str, bytes] = {}
         self.camera_versions: dict[str, int] = {}
+        self.camera_update_versions: dict[str, int] = {}
         self.global_version = 0
         self.last_frame_time: float | None = None
         self.frames: dict[str, dict[str, Any]] = {}
@@ -692,6 +731,7 @@ class CameraMonitor:
                 self.starting = False
                 self.camera_jpegs = {}
                 self.camera_versions = {}
+                self.camera_update_versions = {}
                 self.global_version = 0
                 self.last_frame_time = None
                 self.frames = {}
@@ -729,6 +769,7 @@ class CameraMonitor:
         with self.frame_cond:
             self.camera_jpegs = {}
             self.camera_versions = {}
+            self.camera_update_versions = {}
             self.global_version = 0
             self.last_frame_time = None
             self.frames = {}
@@ -753,6 +794,29 @@ class CameraMonitor:
             )
             version = self.camera_versions.get(name, 0)
             return self.camera_jpegs.get(name, self.placeholder_jpeg), version
+
+    def wait_for_frame_batch(self, after_version: int = 0, timeout: float = 1.0) -> dict[str, Any]:
+        with self.frame_cond:
+            self.frame_cond.wait_for(
+                lambda: self.global_version > after_version,
+                timeout=timeout,
+            )
+            now = time.time()
+            frames: dict[str, dict[str, Any]] = {}
+            for name, jpeg in self.camera_jpegs.items():
+                update_version = self.camera_update_versions.get(name, 0)
+                if update_version <= after_version:
+                    continue
+                item = dict(self.frames.get(name, {}))
+                seen_at = self.frame_seen_at.get(name)
+                item["receive_age_ms"] = None if seen_at is None else max(0.0, (now - seen_at) * 1000.0)
+                item["update_version"] = update_version
+                item["jpeg"] = base64.b64encode(jpeg).decode("ascii")
+                frames[name] = item
+            return {
+                "version": self.global_version,
+                "frames": frames,
+            }
 
     def status(self) -> dict[str, Any]:
         with self.lifecycle_lock:
@@ -818,6 +882,7 @@ class CameraMonitor:
                     frame_versions = dict(self.frame_versions)
                     camera_jpegs = dict(self.camera_jpegs)
                     camera_versions = dict(self.camera_versions)
+                    camera_update_versions = dict(self.camera_update_versions)
                     global_version = self.global_version
 
                 for item_name, item_data in sorted(all_data.items()):
@@ -837,6 +902,7 @@ class CameraMonitor:
                         camera_jpegs[name] = image_bytes
                         camera_versions[name] = camera_versions.get(name, 0) + 1
                         global_version += 1
+                        camera_update_versions[name] = global_version
 
                     frames[name] = {
                         "frame_id": frame_id,
@@ -850,6 +916,9 @@ class CameraMonitor:
                         self.camera_jpegs = {name: jpeg for name, jpeg in camera_jpegs.items() if name in frames}
                         self.camera_versions = {
                             name: version for name, version in camera_versions.items() if name in frames
+                        }
+                        self.camera_update_versions = {
+                            name: version for name, version in camera_update_versions.items() if name in frames
                         }
                         self.global_version = global_version
                         self.last_frame_time = now
@@ -938,6 +1007,12 @@ class CameraMonitorHandler(BaseHTTPRequestHandler):
             self._send_html(HTML)
         elif path == "/api/status":
             self._send_json(self.server.monitor.status())
+        elif path == "/api/frame_batch":
+            params = parse_qs(parsed.query)
+            after = self._as_int((params.get("after") or ["0"])[0], 0)
+            timeout_ms = self._as_int((params.get("timeout_ms") or ["1000"])[0], 1000)
+            timeout = max(0.05, min(2.0, timeout_ms / 1000.0))
+            self._send_json(self.server.monitor.wait_for_frame_batch(after, timeout))
         elif path == "/camera.mjpg":
             params = parse_qs(parsed.query)
             name = (params.get("name") or [""])[0]
@@ -957,7 +1032,16 @@ class CameraMonitorHandler(BaseHTTPRequestHandler):
             self.send_error(HTTPStatus.NOT_FOUND, "not found")
 
     def log_message(self, fmt: str, *args: Any) -> None:
+        if self.path.startswith(("/api/frame_batch", "/api/status")):
+            return
         print(f"[camera-live-monitor] {self.address_string()} - {fmt % args}")
+
+    @staticmethod
+    def _as_int(value: Any, default: int) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
 
     def _send_html(self, body: str) -> None:
         payload = body.encode("utf-8")

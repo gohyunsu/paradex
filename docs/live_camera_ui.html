@@ -44,10 +44,11 @@ python src/capture/camera/live_monitor.py \
       <h2>Preview, not dataset recording</h2>
       <p>
         <code>stream_client.py</code> downsamples each camera image by 8x and publishes
-        per-camera JPEG frames. The browser renders one tile per camera instead of a
-        server-side merged image, so all 20 cameras remain visible and slow frames do
-        not block the whole view. Use this UI for framing, liveness, frame ID progress,
-        and daemon health. Use capture scripts for saved datasets.
+        per-camera JPEG frames. The browser renders one tile per camera from a single
+        <code>/api/frame_batch</code> update loop, avoiding browser per-host MJPEG
+        connection limits. All 20 cameras remain visible and slow frames do not block
+        the whole view. Use this UI for framing, liveness, frame ID progress, and
+        daemon health. Use capture scripts for saved datasets.
       </p>
     </section>
 
