@@ -5,7 +5,11 @@ on localhost and drives rcc through connect→register→start→health→stop�
 asserting no deadlock and that health arrives via the PUB channel.
 """
 import sys, time, threading, json
+from pathlib import Path
+
 import zmq
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import paradex.io.camera_system.remote_camera_controller as rccmod
 

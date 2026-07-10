@@ -5,7 +5,11 @@ loop run, and exercises: arm with no sink -> stream on -> video on -> video off 
 snapshot, then stop/end. Asserts frames flow, sinks toggle live, and files land.
 """
 import os, sys, time, glob, tempfile, types
+from pathlib import Path
+
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 SHAPE = (240, 320, 3)
 
