@@ -19,6 +19,23 @@ import tempfile
 
 from paradex.visualization.robot import RobotModule  
 
+def _mesh_rgb(mesh: trimesh.Trimesh) -> np.ndarray:
+    """Return a robust RGB color for trimesh visuals, including textured meshes."""
+    visual = mesh.visual
+    for attr in ("vertex_colors", "face_colors"):
+        colors = getattr(visual, attr, None)
+        if colors is not None and len(colors) > 0:
+            rgb = np.array(colors[0, :3])
+            break
+    else:
+        material = getattr(visual, "material", None)
+        main_color = getattr(material, "main_color", None)
+        rgb = np.array(main_color[:3]) if main_color is not None else np.array([180, 180, 180])
+
+    if np.issubdtype(rgb.dtype, np.floating) and np.max(rgb) <= 1.0:
+        rgb = rgb * 255.0
+    return rgb.astype(np.uint8)
+
 class ViserViewer():
     def __init__(self, up_direction=np.array([0,0,1]), port_number=8080):
         self.frame_nodes: dict[str, viser.FrameHandle] = {}
@@ -1099,7 +1116,7 @@ class ViserRobotModule():
 
             vertices = mesh.vertices
             faces = mesh.faces
-            color = np.array(mesh.visual.vertex_colors[0, :3])
+            color = _mesh_rgb(mesh)
             self._meshes[name] = (self._target.scene.add_mesh_simple(
                 name, vertices, faces, color=color,
                 cast_shadow=True, receive_shadow=True
@@ -1234,4 +1251,3 @@ def _viser_name_from_frame(
     if root_node_name != "/":
         frames.append(root_node_name)
     return "/".join(frames[::-1])
-

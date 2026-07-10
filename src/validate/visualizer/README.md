@@ -21,5 +21,5 @@ No hardware required (Franka here is rendered from its URDF via Pinocchio/yourdf
 
 ## Related
 - [`paradex/visualization/visualizer/viser.py`](../../../paradex/visualization/visualizer/viser.py) — `ViserViewer` (`add_robot`, `start_viewer`).
-- [`paradex/utils/file_io.py`](../../../paradex/utils/file_io.py) — `get_robot_urdf_path`.
+- [`paradex/robot/utils.py`](../../../paradex/robot/utils.py) — `get_robot_urdf_path`.
 - See `docs/visualization.md` (Claude memory) for the full `ViserViewer` API.

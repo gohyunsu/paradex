@@ -8,7 +8,7 @@ Minimal smoke-test that the `ViserViewer` web 3D viewer launches and can load + 
 
 ## paradex modules used
 - `paradex.visualization.visualizer.viser.ViserViewer` — `add_robot(name, urdf_path)`, `start_viewer()`.
-- `paradex.utils.file_io.get_robot_urdf_path` — resolves URDF path by robot name.
+- `paradex.robot.utils.get_robot_urdf_path` — resolves URDF path by robot name.
 
 ## Data flow & IO
 - No data files; no hardware. Franka is a URDF render (Pinocchio/yourdfpy), not the physical arm.
