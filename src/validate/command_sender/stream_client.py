@@ -14,7 +14,7 @@ cr = CommandReceiver({"start": start_event, "exit": exit_event, "stop": stop_eve
 start_time = time.time()    
 while not exit_event.is_set():
     if start_event.is_set() and not stop_event.is_set():
-        dp.send_data({"value": time.time() - start_time})
+        dp.send_data([{"name": dp.name, "value": time.time() - start_time}], [])
     time.sleep(0.1)
 
     if stop_event.is_set():
@@ -22,4 +22,3 @@ while not exit_event.is_set():
         start_event.clear()
         stop_event.clear()
         continue
-

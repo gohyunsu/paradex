@@ -36,8 +36,18 @@ class DataPublisher(Publisher):
         super().__init__(port=port, name=name, mode=REALTIME)
         print(f"[{self.name}] Publisher started on port {self.port}")
 
-    def send_data(self, metadata: List[Dict[str, Any]],
+    def send_data(self, metadata: Any,
                   data: Optional[List[bytes]] = None) -> int:
+        if isinstance(metadata, dict):
+            item = dict(metadata)
+            item.setdefault("name", self.name)
+            metadata = [item]
+        elif isinstance(metadata, list):
+            metadata = [
+                {**item, "name": item.get("name", self.name)}
+                if isinstance(item, dict) else item
+                for item in metadata
+            ]
         return self.send(meta=metadata, bufs=data, topic="data")
 
     def close(self) -> None:

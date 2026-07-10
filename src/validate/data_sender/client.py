@@ -6,5 +6,5 @@ dp = DataPublisher(name="TestPublisher")
 
 start_time = time.time()
 while True:
-    dp.send_data({"value": time.time() - start_time})
+    dp.send_data([{"name": dp.name, "value": time.time() - start_time}], [])
     time.sleep(0.5)
