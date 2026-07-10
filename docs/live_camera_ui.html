@@ -32,7 +32,7 @@ python src/capture/camera/live_monitor.py \
         <ul class="dense-list">
           <li>SSH-launches <code>src/capture/camera/stream_client.py</code> on capture PCs.</li>
           <li>Creates <code>remote_camera_controller("camera_live_monitor")</code>.</li>
-          <li>Runs <code>rcc.arm(syncMode=False, fps=10)</code>.</li>
+          <li>Runs <code>rcc.arm(syncMode=False, fps=15)</code> by default.</li>
           <li>Turns on the stream sink with <code>rcc.set_stream(True)</code>.</li>
           <li>Collects JPEG previews through <code>DataCollector</code> on port <code>1234</code>.</li>
         </ul>
@@ -44,8 +44,10 @@ python src/capture/camera/live_monitor.py \
       <h2>Preview, not dataset recording</h2>
       <p>
         <code>stream_client.py</code> downsamples each camera image by 8x and publishes
-        JPEG frames. Use this UI for framing, liveness, frame ID progress, and daemon
-        health. Use capture scripts for saved datasets.
+        per-camera JPEG frames. The browser renders one tile per camera instead of a
+        server-side merged image, so all 20 cameras remain visible and slow frames do
+        not block the whole view. Use this UI for framing, liveness, frame ID progress,
+        and daemon health. Use capture scripts for saved datasets.
       </p>
     </section>
 
@@ -58,7 +60,7 @@ python src/capture/camera/live_monitor.py \
       <div class="flow-row" role="row">
         <div role="cell">Start stream</div>
         <div role="cell">Launch preview clients, arm acquisition, enable stream sink.</div>
-        <div role="cell">Merged multi-camera JPEG preview appears in the browser.</div>
+        <div role="cell">Per-camera preview tiles appear in the browser.</div>
       </div>
       <div class="flow-row" role="row">
         <div role="cell">Stop</div>
@@ -101,8 +103,8 @@ python src/capture/camera/live_monitor.py \
     <pre><code>python src/capture/camera/live_monitor.py \
   --host 0.0.0.0 \
   --port 8792 \
-  --camera-fps 10 \
-  --ui-fps 10 \
+  --camera-fps 15 \
+  --ui-fps 30 \
   --remote-log
 
 python src/capture/camera/live_monitor.py \

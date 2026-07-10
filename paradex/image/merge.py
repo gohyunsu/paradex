@@ -51,12 +51,12 @@ def merge_image(image_dict, image_text={}, put_text=True):
         # 이미지 너비의 90%에 맞는 font scale 자동 계산
         
         if put_text:
-            target_width = int(img.shape[1] * 0.5)
             thickness = max(1, img.shape[1] // 500)  # 이미지 크기에 비례하는 두께
             txt = f"{img_name}"
-            font_scale = get_optimal_font_scale(txt, target_width, thickness=thickness)
             if img_name in image_text:
                 txt += f" {image_text[img_name]}"
+            target_width = int(img.shape[1] * 0.9)
+            font_scale = get_optimal_font_scale(txt, target_width, thickness=thickness)
             # 텍스트 크기 계산
             text_size = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)[0]
             text_x = 10

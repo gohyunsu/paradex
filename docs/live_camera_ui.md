@@ -19,13 +19,15 @@ The **Start stream** button:
 
 1. SSH-launches `python src/capture/camera/stream_client.py` on capture PCs.
 2. Creates `remote_camera_controller("camera_live_monitor")`.
-3. Runs `rcc.arm(syncMode=False, fps=10)`.
+3. Runs `rcc.arm(syncMode=False, fps=15)` by default.
 4. Turns on the stream sink with `rcc.set_stream(True)`.
 5. Collects JPEG previews through `DataCollector` on port `1234`.
 
 The preview is intentionally low resolution: `stream_client.py` downsamples each
-camera image by 8x and publishes JPEG frames. Use it for framing, liveness, frame
-ID progress, and daemon health. Use capture scripts for saved datasets.
+camera image by 8x and publishes per-camera JPEG frames. The browser renders one
+tile per camera instead of a server-side merged image, so all 20 cameras remain
+visible and slow frames do not block the whole view. Use it for framing, liveness,
+frame ID progress, and daemon health. Use capture scripts for saved datasets.
 
 ## What Stop Does
 
@@ -55,8 +57,8 @@ Useful options:
 python src/capture/camera/live_monitor.py \
   --host 0.0.0.0 \
   --port 8792 \
-  --camera-fps 10 \
-  --ui-fps 10 \
+  --camera-fps 15 \
+  --ui-fps 30 \
   --remote-log
 ```
 

@@ -237,7 +237,7 @@
         </article>
         <article class="update-card">
           <h3>Browser camera monitor</h3>
-          <p><code>src/capture/camera/live_monitor.py</code> serves a Start/Stop UI for low-latency merged multi-view preview on the main PC.</p>
+          <p><code>src/capture/camera/live_monitor.py</code> serves a Start/Stop UI for low-latency per-camera preview tiles on the main PC.</p>
         </article>
         <article class="update-card">
           <h3>Docs expanded</h3>
@@ -365,7 +365,7 @@ python src/capture/camera/live_monitor.py \
             <li>SSH-launches <code>stream_client.py</code> on capture PCs.</li>
             <li>Arms acquisition through <code>remote_camera_controller</code>.</li>
             <li>Enables the live stream sink with <code>rcc.set_stream(True)</code>.</li>
-            <li>Shows merged JPEG preview, capture-PC status, frame IDs, and frame age.</li>
+            <li>Shows per-camera preview tiles, capture-PC status, frame IDs, and frame age.</li>
             <li>Stop sends <code>exit</code> to remote preview clients.</li>
           </ul>
         </article>
@@ -694,7 +694,7 @@ python src/validate/upload_raw_video/test_func.py \
         </a>
         <a class="link-card" href="docs/live_camera_ui.html">
           <h3>Live camera UI</h3>
-          <p>Browser-based Start/Stop monitor for merged multi-view camera preview on the main PC.</p>
+          <p>Browser-based Start/Stop monitor for per-camera multi-view preview on the main PC.</p>
         </a>
         <a class="link-card" href="docs/index.html">
           <h3><code>docs/</code></h3>
