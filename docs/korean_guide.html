@@ -1,0 +1,381 @@
+<!doctype html>
+<html class="no-js" lang="ko" data-content_root="./">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"/>
+    <link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="prev" title="Paradex Documentation" href="index.html"/>
+    <link rel="next" title="Calibration" href="calibration.html"/>
+    <title>Paradex 한국어 가이드 - paradex 0.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4526bb1b"/>
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f"/>
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d"/>
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e"/>
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7"/>
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=1fe19d68"/>
+    <style>
+      body {
+        --color-code-background: #f8f8f8;
+        --color-code-foreground: black;
+      }
+      @media not print {
+        body[data-theme="dark"] {
+          --color-code-background: #202020;
+          --color-code-foreground: #d0d0d0;
+        }
+        @media (prefers-color-scheme: dark) {
+          body:not([data-theme="light"]) {
+            --color-code-background: #202020;
+            --color-code-foreground: #d0d0d0;
+          }
+        }
+      }
+      .ko-doc-shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 1.5rem;
+      }
+      .ko-doc-topbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: center;
+        margin-bottom: 1.6rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--color-background-border);
+      }
+      .ko-doc-brand {
+        color: var(--color-foreground-primary);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .ko-doc-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+      }
+      .ko-doc-links a {
+        color: var(--color-foreground-muted);
+        text-decoration: none;
+      }
+      .ko-doc-layout {
+        display: grid;
+        grid-template-columns: minmax(180px, 250px) minmax(0, 1fr);
+        gap: 2rem;
+      }
+      .ko-doc-sidebar {
+        position: sticky;
+        top: 1rem;
+        align-self: start;
+        border-right: 1px solid var(--color-background-border);
+        padding-right: 1.2rem;
+      }
+      .ko-doc-sidebar ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .ko-doc-sidebar li {
+        margin: 0.42rem 0;
+      }
+      .ko-doc-sidebar a {
+        color: var(--color-foreground-muted);
+        font-size: 0.92rem;
+        text-decoration: none;
+      }
+      .ko-doc-sidebar a:hover {
+        color: var(--color-brand-primary);
+      }
+      .ko-doc-main {
+        min-width: 0;
+      }
+      .ko-doc-main h1 {
+        margin-top: 0;
+      }
+      .ko-doc-main pre {
+        overflow-x: auto;
+      }
+      .ko-doc-note {
+        border-left: 4px solid var(--color-brand-primary);
+        border-radius: 8px;
+        background: var(--color-background-secondary);
+        padding: 0.9rem 1rem;
+        margin: 1rem 0 1.4rem;
+      }
+      @media (max-width: 860px) {
+        .ko-doc-layout {
+          grid-template-columns: 1fr;
+        }
+        .ko-doc-sidebar {
+          position: static;
+          border-right: 0;
+          border-bottom: 1px solid var(--color-background-border);
+          padding: 0 0 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+
+    <div class="ko-doc-shell">
+      <header class="ko-doc-topbar">
+        <a class="ko-doc-brand" href="index.html">paradex 0.0.0 documentation</a>
+        <nav class="ko-doc-links" aria-label="Documentation links">
+          <a href="../index.html">System map</a>
+          <a href="index.html">Docs home</a>
+          <a href="franka_setup.html">Franka setup</a>
+          <a href="autoapi/index.html">API reference</a>
+        </nav>
+      </header>
+
+      <div class="ko-doc-layout">
+        <aside class="ko-doc-sidebar" aria-label="On this page">
+          <strong>한국어 가이드</strong>
+          <ul>
+            <li><a href="#what">1. Paradex가 하는 일</a></li>
+            <li><a href="#topology">2. 전체 구조</a></li>
+            <li><a href="#components">3. 주요 구성 요소</a></li>
+            <li><a href="#flow">4. 실행 흐름</a></li>
+            <li><a href="#config">5. 설정 파일</a></li>
+            <li><a href="#validation">6. Validation 순서</a></li>
+            <li><a href="#franka">7. Franka로 돌릴 때</a></li>
+            <li><a href="#terms">8. 용어 정리</a></li>
+            <li><a href="#related">9. 관련 문서</a></li>
+          </ul>
+        </aside>
+
+        <article class="ko-doc-main" role="main" id="furo-main-content">
+          <section id="paradex-korean-guide">
+            <h1>Paradex 한국어 가이드</h1>
+            <p>
+              이 문서는 Paradex를 처음 보는 사람이 전체 시스템을 빠르게 이해하고,
+              어떤 순서로 setup과 validation을 진행해야 하는지 잡기 위한 한국어
+              요약이다. 세부 API 시그니처는 영어 API 문서를 기준으로 본다.
+            </p>
+
+            <section id="what">
+              <h2>1. Paradex가 하는 일</h2>
+              <p>
+                Paradex는 로봇 조작 실험을 위한 분산 멀티카메라 비전 + 로봇 제어
+                프레임워크다. 단일 모델이 아니라 실험 장비 전체를 묶는 glue layer다.
+              </p>
+              <ol>
+                <li>여러 capture PC에 붙은 카메라를 main PC에서 원격으로 켜고 끈다.</li>
+                <li>카메라 영상, 로봇 관절 상태, 손 상태, teleop 입력, 타임스탬프를 한 session으로 저장한다.</li>
+                <li>저장된 raw 데이터를 보정하고, 동기화하고, overlay와 mask, 3D 재구성, object pose 같은 downstream 결과로 가공한다.</li>
+                <li>perception 결과가 로봇 좌표계에서 말이 되는지 확인하고, 실제 로봇 실행 전에 visualizer와 validation script로 점검한다.</li>
+              </ol>
+            </section>
+
+            <section id="topology">
+              <h2>2. 전체 구조</h2>
+              <pre><code>Main PC
+  ├─ capture PC들을 SSH로 실행
+  ├─ ZMQ command/data channel 관리
+  ├─ calibration, processing, inference orchestration
+  └─ robot controller / visualizer 실행
+
+Capture PC
+  ├─ FLIR camera daemon 실행
+  ├─ 카메라 hardware lifecycle 소유
+  ├─ local raw video 저장
+  └─ telemetry/progress를 main PC로 전송
+
+NAS / shared_data
+  ├─ raw session
+  ├─ camera parameters
+  ├─ processed videos and masks
+  ├─ object reconstruction outputs
+  └─ validation artifacts</code></pre>
+              <p>
+                핵심 원칙은 main PC가 카메라를 직접 열지 않는다는 점이다. main PC는
+                <code>remote_camera_controller</code>를 통해 capture PC daemon에 명령을 보내고,
+                capture PC daemon이 실제 FLIR/PySpin camera를 소유한다.
+              </p>
+            </section>
+
+            <section id="components">
+              <h2>3. 주요 구성 요소</h2>
+              <table class="docutils align-default">
+                <thead>
+                  <tr><th class="head">구성 요소</th><th class="head">위치</th><th class="head">역할</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Camera daemon</td><td><code>src/camera/server_daemon.py</code></td><td>capture PC에서 카메라를 소유하고 ZMQ 명령을 받는다.</td></tr>
+                  <tr><td>Remote camera controller</td><td><code>paradex/io/camera_system/remote_camera_controller.py</code></td><td>main PC에서 여러 capture PC daemon을 제어한다.</td></tr>
+                  <tr><td>Capture-PC transport</td><td><code>paradex/io/capture_pc/</code></td><td>SSH launch, command channel, telemetry/data channel.</td></tr>
+                  <tr><td>Dataset acquisition</td><td><code>src/dataset_acquisition/</code>, <code>paradex/dataset_acqusition/</code></td><td>카메라/로봇/손/teleop stream을 session으로 저장한다.</td></tr>
+                  <tr><td>Processing framework</td><td><code>paradex/process/</code></td><td><code>Job</code>, <code>Ctx</code>, <code>run_jobs</code>, <code>run_distributed</code> 기반 batch 처리.</td></tr>
+                  <tr><td>Video processor</td><td><code>paradex/video/</code></td><td>raw video undistort, dropped-frame correction, H.264 encode, NAS upload.</td></tr>
+                  <tr><td>Image tools</td><td><code>paradex/image/</code></td><td><code>ImageDict</code>, undistort, merge, projection, ArUco/Charuco 처리.</td></tr>
+                  <tr><td>Robot layer</td><td><code>paradex/robot/</code>, <code>paradex/io/robot_controller/</code></td><td>URDF/FK/planning/controller 연결.</td></tr>
+                  <tr><td>Visualization</td><td><code>paradex/visualization/</code></td><td>Viser/Open3D 기반 scene, robot, overlay 확인.</td></tr>
+                  <tr><td>Validation scripts</td><td><code>src/validate/</code></td><td>실험 전 subsystem smoke test.</td></tr>
+                </tbody>
+              </table>
+              <div class="ko-doc-note">
+                <code>dataset_acqusition</code>의 오타는 기존 코드 호환을 위한 의도된 이름이다.
+                고치지 않는다.
+              </div>
+            </section>
+
+            <section id="flow">
+              <h2>4. 실행 흐름</h2>
+              <pre><code>system/current 설정
+  -> camera daemon 준비
+  -> capture-PC transport 확인
+  -> camera acquisition 확인
+  -> robot / hand / teleop 연결 확인
+  -> capture session 실행
+  -> raw data processing
+  -> pose / grasp / overlay validation
+  -> robot execution</code></pre>
+              <p>
+                각 단계는 다음 단계의 입력을 만든다. camera-to-robot calibration이 바뀌면
+                pose estimation, grasp transform, robot overlay를 다시 확인해야 한다.
+              </p>
+            </section>
+
+            <section id="config">
+              <h2>5. 설정 파일</h2>
+              <p>
+                <code>system/current/</code>는 실행 중인 머신에 맞는 local config다.
+                git에 들어가는 공통 코드와 다르게, 이 디렉터리는 장비별 설정을 가리킨다.
+              </p>
+              <table class="docutils align-default">
+                <thead>
+                  <tr><th class="head">파일</th><th class="head">의미</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>pc.json</code></td><td>capture PC 이름, IP, camera serial list.</td></tr>
+                  <tr><td><code>network.json</code></td><td>robot, signal generator, 기타 네트워크 장비 정보.</td></tr>
+                  <tr><td><code>camera.json</code></td><td>serial별 gain, exposure, packet size 등 camera baseline 설정.</td></tr>
+                  <tr><td><code>charuco_info.json</code></td><td>calibration board 정보.</td></tr>
+                </tbody>
+              </table>
+              <p>
+                코드에서는 PC 목록이나 serial number를 hardcode하지 말고,
+                <code>paradex.utils.system</code>의 loader를 통해 읽는 것이 기본 규약이다.
+              </p>
+            </section>
+
+            <section id="validation">
+              <h2>6. Validation 순서</h2>
+              <h3>6.1 Offline sanity check</h3>
+              <pre><code>python src/validate/camera_system/hang_recovery_mock.py
+python src/validate/camera_system/camera_sink_mock.py
+python src/validate/camera_system/rcc_protocol_mock.py
+python src/validate/visualizer/franka.py</code></pre>
+              <p>통과 기준: mock script가 <code>PASS</code> 또는 <code>ALL PASSED</code>를 출력하고, Franka visualizer가 traceback 없이 Viser URL을 출력한다.</p>
+
+              <h3>6.2 Main PC to capture PC transport</h3>
+              <pre><code>python src/validate/data_sender/main.py
+python src/validate/command_sender/stream_remote.py</code></pre>
+              <p>
+                <code>capture1</code>, <code>capture2</code>, <code>capture3</code>, <code>capture5</code>,
+                <code>capture6</code> 같은 PC 이름별로 증가하는 <code>value</code>가 출력되면 통과다.
+                command sender는 <code>c</code>가 start, <code>s</code>가 stop, <code>q</code>가 quit이다.
+              </p>
+
+              <h3>6.3 Camera path</h3>
+              <pre><code>python src/validate/camera_system/camera_loader.py
+python src/validate/camera_system/camera_reader.py
+python src/validate/camera_system/remote_camera_controller.py</code></pre>
+              <p>통과 기준: <code>get_all_errors()</code>가 비어 있고, live image grid의 frame id가 증가하며, recording start/stop이 hang 없이 끝난다.</p>
+
+              <h3>6.4 Sync / calibration</h3>
+              <pre><code>python src/validate/camera_system/sync_check.py --view
+python src/validate/calibration/extrinsic_drift.py
+python src/validate/calibration/compare_xarm_kinematic_calib.py --no_overlay</code></pre>
+              <p>hardware trigger와 calibration data가 필요하다. frame id가 tolerance 안에서 맞고 drift/residual이 이전 기준보다 커지지 않아야 한다.</p>
+
+              <h3>6.5 Robot / hand execution</h3>
+              <pre><code>python src/validate/robot/xarm_base_wiggle.py
+python src/validate/robot/inspire_left.py
+python src/validate/robot/inspire_left_overlay.py</code></pre>
+              <p>실제 로봇이나 손을 움직일 수 있으므로 사람이 확인하면서 실행한다. workspace가 비어 있고 emergency stop을 누를 수 있는 상태여야 한다.</p>
+            </section>
+
+            <section id="franka">
+              <h2>7. Franka로 돌릴 때</h2>
+              <p>
+                현재 main line은 Franka FR3를 end-to-end로 바로 움직이는 상태는 아니다.
+                이미 있는 것은 URDF, visualizer, 일부 config entry, frame 정의다. 실제 제어를
+                하려면 <code>origin/vlm_dex</code> 쪽 Franka controller 관련 코드 중 필요한 부분만
+                선별 porting해야 한다.
+              </p>
+              <table class="docutils align-default">
+                <thead>
+                  <tr><th class="head">현재 있는 것</th><th class="head">아직 필요한 것</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>rsc/robot/franka.urdf</code>, <code>src/validate/visualizer/franka.py</code>, 일부 <code>network.json</code> entry, frame 정의</td>
+                    <td><code>franka_controller.py</code>, <code>get_arm("franka")</code>, <code>fr3_link8</code> hand-eye 지원, ROS 2 controller smoke test</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p>자세한 내용은 <a class="reference internal" href="franka_setup.html">Franka FR3 Setup Notes</a>를 본다.</p>
+            </section>
+
+            <section id="terms">
+              <h2>8. 용어 정리</h2>
+              <table class="docutils align-default">
+                <thead>
+                  <tr><th class="head">용어</th><th class="head">의미</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Rig</td><td>로봇 arm, hand, cameras, mounts, table, lights, capture PCs, NAS까지 포함한 전체 실험 장비 묶음.</td></tr>
+                  <tr><td>Main PC</td><td>실험을 orchestration하는 컴퓨터. capture PC와 robot/control process를 조율한다.</td></tr>
+                  <tr><td>Capture PC</td><td>카메라가 직접 연결된 컴퓨터. camera daemon과 raw video 저장을 담당한다.</td></tr>
+                  <tr><td>Daemon</td><td>계속 떠 있으면서 명령을 기다리는 service process. Paradex에서는 camera daemon이 대표적이다.</td></tr>
+                  <tr><td>ZMQ</td><td>main PC와 capture PC 사이 command/data message를 보내는 네트워크 transport.</td></tr>
+                  <tr><td>NAS</td><td>여러 머신이 함께 쓰는 network storage. raw data와 processed output을 모은다.</td></tr>
+                  <tr><td>Calibration</td><td>카메라 내부 파라미터와 카메라-로봇 좌표 관계를 측정하는 과정.</td></tr>
+                  <tr><td>C2R</td><td>camera-to-robot transform. 카메라 좌표의 점/pose를 로봇 좌표계로 바꾼다.</td></tr>
+                  <tr><td>6D pose</td><td>물체의 3D 위치 + 3D 회전.</td></tr>
+                  <tr><td>IK</td><td>inverse kinematics. 원하는 end-effector pose를 만들 수 있는 joint angle을 찾는 계산.</td></tr>
+                  <tr><td>Sink</td><td>이미 acquisition 중인 frame stream에서 어떤 output을 켤지 정하는 출력 경로. 예: video, stream, snapshot.</td></tr>
+                  <tr><td>Job</td><td><code>paradex.process</code>에서 처리할 하나의 작업 단위. 입력, 출력, done check, metadata를 가진다.</td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section id="related">
+              <h2>9. 관련 문서</h2>
+              <ul>
+                <li><a class="reference internal" href="camera_system.html">Camera System</a></li>
+                <li><a class="reference internal" href="robot.html">Robot Control</a></li>
+                <li><a class="reference internal" href="dataset_acquisition.html">Dataset Acquisition</a></li>
+                <li><a class="reference internal" href="process.html">Video Processing</a></li>
+                <li><a class="reference internal" href="franka_setup.html">Franka FR3 Setup Notes</a></li>
+                <li><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+              </ul>
+            </section>
+          </section>
+        </article>
+      </div>
+
+      <footer>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">Copyright &#169; 2025, Mingi Choi</div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="_static/documentation_options.js?v=7026087e"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+  </body>
+</html>

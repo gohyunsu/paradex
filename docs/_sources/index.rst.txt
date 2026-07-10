@@ -13,6 +13,7 @@ the ``paradex`` package source, so it always matches the code.
    :caption: Guide
 
    camera_system
+   korean_guide
    calibration
    robot
    capture
