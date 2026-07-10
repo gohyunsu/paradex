@@ -15,6 +15,7 @@
         <span>Paradex</span>
       </a>
       <div class="nav-links">
+        <a href="#overview">What</a>
         <a href="#updates">Updates</a>
         <a href="#system">System</a>
         <a href="#runtime">Runtime</a>
@@ -27,17 +28,17 @@
 
     <section id="top" class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow">Current fork map</p>
-        <h1 id="hero-title">Paradex system pipeline</h1>
+        <p class="eyebrow">Distributed robot data pipeline</p>
+        <h1 id="hero-title">Paradex builds robot datasets from camera rigs</h1>
         <p class="tagline">
-          One page for the current system boundary: camera daemons, capture-PC transport,
-          dataset acquisition, <code>paradex.process</code>, object pose, grasp inference,
-          validation, and NAS-backed artifacts.
+          It records synchronized cameras and robot state, calibrates camera-to-robot
+          geometry, processes sessions on NAS, and validates object pose, grasp, and
+          execution checks.
         </p>
         <div class="hero-actions" aria-label="Primary actions">
-          <a class="button primary" href="#system">View system path</a>
+          <a class="button primary" href="#overview">What it does</a>
+          <a class="button" href="#system">View pipeline</a>
           <a class="button" href="docs/index.html">Open API docs</a>
-          <a class="button quiet" href="https://github.com/gohyunsu/paradex">GitHub</a>
         </div>
         <dl class="version-strip" aria-label="Repository state">
           <div>
@@ -91,6 +92,57 @@
   </header>
 
   <main>
+    <section id="overview" class="section" aria-labelledby="overview-title">
+      <div class="section-head">
+        <p class="eyebrow">What Paradex does</p>
+        <h2 id="overview-title">A lab pipeline for seeing, recording, processing, and acting</h2>
+        <p>
+          Paradex is not one model or one demo script. It is the glue around a
+          manipulation rig: it gets synchronized camera data and robot state into a
+          calibrated dataset, processes that dataset into usable artifacts, then feeds
+          pose, grasp, and robot-control checks.
+        </p>
+      </div>
+
+      <div class="purpose-grid">
+        <article class="purpose-card accent-blue">
+          <span class="purpose-index">01</span>
+          <h3>Run the rig</h3>
+          <p>Main PC scripts command capture-PC camera daemons, robot arms, hands, teleop devices, hardware sync, and current machine config.</p>
+        </article>
+        <article class="purpose-card accent-green">
+          <span class="purpose-index">02</span>
+          <h3>Build datasets</h3>
+          <p>Capture sessions preserve raw videos/images, robot qpos, hand actions, teleop state, timestamps, calibration snapshots, and metadata.</p>
+        </article>
+        <article class="purpose-card accent-amber">
+          <span class="purpose-index">03</span>
+          <h3>Make data usable</h3>
+          <p>Processing jobs sync streams, undistort images, render overlays, extract masks, reconstruct objects, and upload derived outputs to NAS.</p>
+        </article>
+        <article class="purpose-card accent-teal">
+          <span class="purpose-index">04</span>
+          <h3>Close the loop</h3>
+          <p>Calibration, 6D pose, grasp transforms, IK, Viser/Open3D previews, and robot overlays turn perception results into executable checks.</p>
+        </article>
+      </div>
+
+      <div class="io-strip" aria-label="Paradex input output summary">
+        <div>
+          <dt>Inputs</dt>
+          <dd>camera frames, robot state, hand state, teleop streams, calibration boards, object scans</dd>
+        </div>
+        <div>
+          <dt>Core work</dt>
+          <dd>synchronize, calibrate, undistort, reconstruct, segment, estimate pose, transform grasps</dd>
+        </div>
+        <div>
+          <dt>Outputs</dt>
+          <dd>raw/processed datasets, C2R, overlays, masks, COLMAP models, pose/grasp validation artifacts</dd>
+        </div>
+      </div>
+    </section>
+
     <section id="updates" class="section" aria-labelledby="updates-title">
       <div class="section-head">
         <p class="eyebrow">Latest upstream integrated</p>
