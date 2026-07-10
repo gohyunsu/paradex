@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Franka FR3 Setup Notes - Paradex</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <main class="section">
+    <div class="section-head">
+      <p class="eyebrow">Robot setup</p>
+      <h1>Franka FR3 setup notes</h1>
+      <p>Status checked: <code>2026-07-10</code>. Current <code>main</code> has partial Franka support, but not a complete hardware path.</p>
+    </div>
+
+    <div class="process-lanes">
+      <article class="lane">
+        <h3>Already present</h3>
+        <ul class="dense-list">
+          <li><code>rsc/robot/franka.urdf</code> for FK and visualization.</li>
+          <li><code>src/validate/visualizer/franka.py</code> for URDF smoke tests.</li>
+          <li><code>system/paradex2</code> and <code>system/robothome</code> include Franka IP entries.</li>
+          <li><code>paradex/transforms/coordinate.py</code> and retargetor APIs mention <code>franka</code>.</li>
+        </ul>
+      </article>
+      <article class="lane">
+        <h3>Still missing</h3>
+        <ul class="dense-list">
+          <li><code>FrankaController</code> is not on current <code>main</code>.</li>
+          <li><code>get_arm("franka")</code> is still a stub.</li>
+          <li>Hand-eye capture supports xArm only.</li>
+          <li>Hand-eye FK is still hardcoded to xArm <code>link6</code>.</li>
+        </ul>
+      </article>
+    </div>
+
+    <section class="section-head">
+      <p class="eyebrow">Recommended path</p>
+      <h2>Port only Franka-specific files from <code>origin/vlm_dex</code></h2>
+      <p>
+        The <code>origin/vlm_dex</code> branch contains useful Franka work, including
+        <code>paradex/io/robot_controller/franka_controller.py</code>,
+        <code>src/capture/robot/franka_teaching.py</code>,
+        <code>src/capture/robot/franka_replay_check.py</code>, and
+        <code>src/capture/robot/franka_home.py</code>. Do not merge the full branch
+        without review; it diverges broadly from the current camera/process/site line.
+      </p>
+    </section>
+
+    <div class="flow-table" role="table" aria-label="Franka setup flow">
+      <div class="flow-row header" role="row">
+        <div role="columnheader">Area</div>
+        <div role="columnheader">Setup</div>
+        <div role="columnheader">Check</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">FCI network</div>
+        <div role="cell">Robot/Desk <code>172.16.1.11</code>, host NIC on <code>172.16.1.x/24</code>.</div>
+        <div role="cell"><code>https://172.16.1.11/desk/</code>, FCI active, joints unlocked.</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">ROS 2</div>
+        <div role="cell">Source Humble and <code>~/franka_ros2_ws</code>, then launch <code>franka_fr3_moveit_config</code>.</div>
+        <div role="cell"><code>ros2 control list_controllers</code>, <code>ros2 topic echo --once /joint_states</code>.</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">Paradex config</div>
+        <div role="cell">Create/link <code>system/current</code> with normalized <code>franka</code> config.</div>
+        <div role="cell">Import <code>paradex.utils.system</code> without missing config errors.</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">Controller</div>
+        <div role="cell">Expose <code>move</code>, <code>get_data</code>, and <code>end</code> through <code>get_arm("franka")</code>.</div>
+        <div role="cell">Read qpos by joint name and TF <code>fr3_link0 -> fr3_link8</code>.</div>
+      </div>
+      <div class="flow-row" role="row">
+        <div role="cell">Calibration</div>
+        <div role="cell">Teach poses, replay without cameras, capture hand-eye images, then solve with Franka FK.</div>
+        <div role="cell">Use <code>fr3_link8</code> for FK and validate C2R overlays.</div>
+      </div>
+    </div>
+
+    <section class="section-head">
+      <p class="eyebrow">Commands</p>
+      <h2>Expected run order after porting</h2>
+    </section>
+    <pre><code>source /opt/ros/humble/setup.bash
+source ~/franka_ros2_ws/install/setup.bash
+
+ros2 launch franka_fr3_moveit_config moveit.launch.py \
+  robot_ip:=172.16.1.11 \
+  use_fake_hardware:=false \
+  load_gripper:=false
+
+python src/capture/robot/franka_teaching.py
+python src/capture/robot/franka_replay_check.py --step --home
+python src/calibration/handeye/capture.py --arm franka
+PYTHONPATH= python src/calibration/handeye/calculate.py --arm franka</code></pre>
+
+    <section class="section-head">
+      <p class="eyebrow">Risks</p>
+      <h2>Do not skip these checks</h2>
+      <p>
+        Validate <code>DEVICE2WRIST["franka"]</code> before teleop, allow robot UDP through
+        <code>ufw</code>, keep the Desk end-effector load accurate, and expect real-time
+        kernel issues if FCI reports communication constraint violations.
+      </p>
+      <p><a href="franka_setup.md">Markdown source</a> · <a href="../index.html">Back to system map</a></p>
+    </section>
+  </main>
+</body>
+</html>
