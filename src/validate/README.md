@@ -5,7 +5,23 @@ rig (cameras, signal generator, robot, teleop, networking) to confirm they work
 end-to-end before a real capture session. These are diagnostic/smoke-test tools,
 not part of the production capture pipeline.
 
+## Recommended Order
+
+Run the cheapest checks first. Move to hardware-triggered or robot-motion checks
+only after transport and camera daemons look healthy.
+
+| Stage | Goal | Typical scripts |
+|-------|------|-----------------|
+| Offline | Catch import/protocol regressions without moving hardware. | `camera_system/hang_recovery_mock.py`, `camera_system/rcc_protocol_mock.py`, `visualizer/franka.py` |
+| Main PC ↔ capture PCs | Confirm SSH launch, command delivery, and telemetry return. | `data_sender/main.py`, `command_sender/stream_remote.py` |
+| Camera daemons | Confirm each capture PC sees the expected cameras and frame IDs advance. | `camera_system/remote_camera_controller.py --duration 5 --fps 10 --no_stream` |
+| Live preview | Confirm the shared-memory stream path and operator visibility. | `src/capture/camera/stream_remote.py` or the browser live monitor |
+| Trigger / sync | Confirm hardware trigger timing and multi-camera frame alignment. | `camera_system/signal_generator.py`, `camera_system/sync_check.py --view`, `camera_system/timestamp.py` |
+| Calibration quality | Check whether existing calibration still matches the rig. | `calibration/extrinsic_drift.py`, `calibration/compare_xarm_kinematic_calib.py` |
+| Robot / hand | Validate real robot motion only in a cleared workspace. | `robot/*`, `robot_controller/*` |
+
 ## Subsystems
+
 | Directory | What it validates |
 |-----------|-------------------|
 | [`calibration/`](calibration/) | Re-evaluates hand-eye / kinematic calibration quality and camera pose drift across sessions |
@@ -22,11 +38,27 @@ not part of the production capture pipeline.
 > subsystems (`robot/`, `robot_controller/`, `teleop/`, `upload_raw_video/`,
 > `visualizer/`) are documented in a separate pass.
 
-## Distributed-system shape
+## Distributed-System Shape
+
 Most camera/network validators come in a **main-PC / capture-PC pair**: a `*_remote`
 or `main`/`stream_remote` script runs on the main PC and SSHes a `*_client`/`client`
 script onto the capture PCs (via `paradex.io.capture_pc.ssh.run_script`). Run the
 main-PC script; it launches the capture-PC side for you.
+
+Capture-PC clients normally use the shared command/data ports. Do not run two
+validators that both use `DataPublisher` / `DataCollector` or `CommandSender` at
+the same time unless the scripts explicitly use separate ports.
+
+## Pass/Fail Reading
+
+- A validation script passing means the tested layer worked in that run. It does
+  not prove the whole capture pipeline is ready.
+- Camera frame IDs advancing proves acquisition is alive, but not necessarily
+  hardware synchronized. Use sync checks for timing.
+- Transport latency reported by `DataCollector.get_stats()` measures message age
+  between capture PC and main PC. Browser/display latency is a separate layer.
+- Hardware-trigger scripts can affect the rig. Confirm the correct signal
+  generator device before running them.
 
 ## Related
 - [`paradex/io/camera_system/`](../../paradex/io/camera_system) — the real camera stack these mirror
