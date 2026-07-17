@@ -7,6 +7,8 @@ core_requirements = [
     "msgpack",    # capture_pc message envelope header codec
 ]
 
+ui_requirements = ["opencv-python"]
+
 setup(
     name="paradex",
     version="0.1",
@@ -20,4 +22,5 @@ setup(
     include_package_data=True,
     python_requires=">=3.8",
     install_requires=core_requirements,
+    extras_require={"ui": ui_requirements},
 )
