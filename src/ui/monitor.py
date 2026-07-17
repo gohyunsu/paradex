@@ -148,7 +148,12 @@ def main(argv=None) -> int:
         controller = remote_camera_controller("monitor")
         controller.arm(syncMode=args.sync, fps=args.fps)
         controller.set_stream(True)
-        cv2.namedWindow(window, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+        window_flags = (
+            cv2.WINDOW_NORMAL
+            | cv2.WINDOW_KEEPRATIO
+            | getattr(cv2, "WINDOW_GUI_NORMAL", 0)
+        )
+        cv2.namedWindow(window, window_flags)
         displayed_size = None
 
         while not stopping.is_set():
