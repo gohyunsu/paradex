@@ -33,8 +33,12 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-width", type=int, default=1920, help="maximum display width")
     parser.add_argument("--max-height", type=int, default=1080, help="maximum display height")
     parser.add_argument("--tile-width", type=int, default=384, help="unscaled tile width")
-    parser.add_argument("--spread-warn", type=int, default=2, help="frame spread warning threshold")
-    parser.add_argument("--spread-fail", type=int, default=5, help="frame spread failure threshold")
+    parser.add_argument(
+        "--sync-tolerance",
+        type=int,
+        default=1,
+        help="maximum acceptable frame-ID spread; matches sync_check.py",
+    )
     parser.add_argument("--stale-ms", type=int, default=1000, help="camera stale threshold")
     return parser
 
@@ -67,10 +71,10 @@ def compose(frames, expected, args, cv2, np):
 
     if ready == "WAITING":
         state, state_color = "WAITING", (90, 180, 255)
-    elif stale or spread > args.spread_fail:
+    elif stale or spread > args.sync_tolerance:
         state, state_color = "OUT OF SYNC", (45, 45, 230)
-    elif spread > args.spread_warn:
-        state, state_color = "SYNC WARNING", (0, 180, 255)
+    elif spread:
+        state, state_color = "SYNC OK / JITTER", (50, 190, 70)
     else:
         state, state_color = "SYNC OK", (50, 190, 70)
 
@@ -82,12 +86,12 @@ def compose(frames, expected, args, cv2, np):
         if name in stale:
             border = (45, 45, 230)
             detail = "STALE"
-        elif abs(delta) > args.spread_fail:
+        elif spread > args.sync_tolerance and frame.frame_id != high:
             border = (45, 45, 230)
-            detail = f"d{delta:+d}"
-        elif abs(delta) > args.spread_warn:
+            detail = f"LAG d{delta:+d}"
+        elif frame.frame_id != high:
             border = (0, 180, 255)
-            detail = f"d{delta:+d}"
+            detail = f"JITTER d{delta:+d}"
         else:
             border = (50, 190, 70)
             detail = f"d{delta:+d}"
