@@ -43,7 +43,7 @@ class UTGE900:
             raise ValueError(f"UTG900E channel must be 1 or 2, got {ch}")
         return ch
 
-    def generate(self, ch=1, wave="square", freq=30, amp=10):
+    def generate(self, ch=1, wave="square", freq=30, amp=5, offset=0):
         """Configure a continuous waveform while keeping its output disabled."""
         ch = self._channel(ch)
         try:
@@ -58,16 +58,16 @@ class UTGE900:
         self.write(f"{prefix}:BASE:FREQuency {freq}")
         self.write(f"{prefix}:AMPLitude:UNIT VPP")
         self.write(f"{prefix}:BASE:AMPLitude {amp}")
-        self.write(f"{prefix}:BASE:OFFSet 0")
+        self.write(f"{prefix}:BASE:OFFSet {offset}")
         if wave == "SQUare":
             self.write(f"{prefix}:BASE:DUTY 50")
 
     def start(self, fps, ch=1):
-        """Configure a 10 Vpp square trigger and enable its channel output."""
+        """Configure a 0-5 V square trigger and enable its channel output."""
         ch = self._channel(ch)
         if self.ch[ch - 1]:
             return
-        self.generate(ch, wave="square", freq=fps, amp=10)
+        self.generate(ch, wave="square", freq=fps, amp=5, offset=2.5)
         self.write(f":CHANnel{ch}:OUTPut ON")
         self.ch[ch - 1] = True
 
