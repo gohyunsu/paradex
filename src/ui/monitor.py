@@ -69,6 +69,17 @@ def sync_summary(
     return median, frame_ids[0], frame_ids[-1], stale, "READY"
 
 
+def require_ok(stage, response):
+    """Raise with the per-Capture-PC response when a distributed command fails."""
+    failed = {
+        pc: item.get("msg", item)
+        for pc, item in response.items()
+        if item.get("status") != "ok"
+    }
+    if failed:
+        raise RuntimeError(f"{stage} failed: {failed}")
+
+
 def compose(frames, expected, args, cv2, np):
     """Compose aspect-preserving camera tiles with a compact sync status strip."""
     names = sorted(frames)
@@ -165,16 +176,20 @@ def main(argv=None) -> int:
     signal.signal(signal.SIGINT, request_stop)
     signal.signal(signal.SIGTERM, request_stop)
     try:
-        run_script("python src/capture/camera/stream_client.py")
         sender = CommandSender()
         collector = DataCollector()
         collector.start()
         controller = remote_camera_controller("monitor")
         controller.arm(syncMode=args.sync, fps=args.fps)
+        require_ok("camera arm", controller.last_response)
+        # MultiCameraReader opens the per-camera shared-memory blocks at startup.
+        # They are created by arm(), so clients must launch only afterwards.
+        run_script("python src/capture/camera/stream_client.py")
+        time.sleep(0.5)
+        require_ok("stream sink", controller.set_stream(True))
         if args.trigger:
             trigger = UTGE900(**network_info["signal_generator"]["param"])
             trigger.start(fps=args.fps)
-        controller.set_stream(True)
         window_flags = (
             cv2.WINDOW_NORMAL
             | cv2.WINDOW_KEEPRATIO
